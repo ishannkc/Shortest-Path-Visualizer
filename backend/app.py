@@ -2,11 +2,12 @@ import json
 import os
 import sys
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.normpath(os.path.join(BASE_DIR, ".."))
+FRONTEND_DIR = os.path.join(ROOT_DIR, "frontend")
 if ROOT_DIR not in sys.path:
 	sys.path.insert(0, ROOT_DIR)
 
@@ -27,6 +28,16 @@ def get_graph():
 	with open(data_path, "r", encoding="utf-8") as file:
 		data = json.load(file)
 	return jsonify(data)
+
+
+@app.get("/")
+def serve_index():
+	return send_from_directory(FRONTEND_DIR, "index.html")
+
+
+@app.get("/frontend/<path:filename>")
+def serve_frontend_file(filename):
+	return send_from_directory(FRONTEND_DIR, filename)
 
 
 @app.get("/nodes")

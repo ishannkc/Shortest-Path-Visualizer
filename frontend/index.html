@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>KU Shortest Path Visualizer</title>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/styles/vis-network.min.css"
+		/>
+		<link rel="stylesheet" href="/frontend/style.css" />
+	</head>
+	<body>
+		<header>
+			<h1>KU Shortest Path Visualizer</h1>
+			<p>COMP 323 — Graph Theory</p>
+		</header>
+
+		<div class="controls">
+			<select id="src-select">
+				<option value="" selected disabled>Select Source</option>
+			</select>
+			<select id="dst-select">
+				<option value="" selected disabled>Select Destination</option>
+			</select>
+			<button id="run-btn">Find Shortest Path</button>
+			<span id="error-msg"></span>
+		</div>
+
+		<div id="graph-container"></div>
+
+		<div class="results">
+			<div class="panel dijkstra-panel">
+				<h2>Dijkstra's Algorithm</h2>
+				<p>Path: <span id="dijkstra-path">—</span></p>
+				<p>Distance: <span id="dijkstra-distance">—</span></p>
+				<p>Steps: <span id="dijkstra-steps">—</span></p>
+			</div>
+			<div class="panel bellman-panel">
+				<h2>Bellman-Ford Algorithm</h2>
+				<p>Path: <span id="bellman-path">—</span></p>
+				<p>Distance: <span id="bellman-distance">—</span></p>
+				<p>Steps: <span id="bellman-steps">—</span></p>
+			</div>
+		</div>
+
+		<table id="comparison-table">
+			<thead>
+				<tr>
+					<th>Metric</th>
+					<th>Dijkstra</th>
+					<th>Bellman-Ford</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>Path</td>
+					<td id="cmp-path-d">—</td>
+					<td id="cmp-path-b">—</td>
+				</tr>
+				<tr>
+					<td>Distance</td>
+					<td id="cmp-distance-d">—</td>
+					<td id="cmp-distance-b">—</td>
+				</tr>
+				<tr>
+					<td>Steps</td>
+					<td id="cmp-steps-d">—</td>
+					<td id="cmp-steps-b">—</td>
+				</tr>
+				<tr>
+					<td>Time Complexity</td>
+					<td id="cmp-time-d">—</td>
+					<td id="cmp-time-b">—</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/vis-network.min.js"></script>
+		<script src="/frontend/main.js"></script>
+	</body>
+</html>
