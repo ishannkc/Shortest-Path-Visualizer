@@ -134,23 +134,68 @@ document.addEventListener("DOMContentLoaded", () => {
 			const dResult = data.dijkstra;
 			const bResult = data.bellman_ford;
 
-			edgesDataSet.get().forEach((edge) => {
-				edgesDataSet.update({ id: edge.id, color: "#848484" });
-			});
+			const dEdges = new Set();
+			const bEdges = new Set();
 
 			for (let i = 0; i < dResult.path.length - 1; i += 1) {
 				const edgeId = findEdgeId(dResult.path[i], dResult.path[i + 1]);
 				if (edgeId !== null) {
-					edgesDataSet.update({ id: edgeId, color: "#1E90FF" });
+					dEdges.add(edgeId);
 				}
 			}
 
 			for (let i = 0; i < bResult.path.length - 1; i += 1) {
 				const edgeId = findEdgeId(bResult.path[i], bResult.path[i + 1]);
 				if (edgeId !== null) {
-					edgesDataSet.update({ id: edgeId, color: "#FF8C00" });
+					bEdges.add(edgeId);
 				}
 			}
+
+			edgesDataSet.get().forEach((edge) => {
+				const inD = dEdges.has(edge.id);
+				const inB = bEdges.has(edge.id);
+
+				if (inD && inB) {
+					edgesDataSet.update({
+						id: edge.id,
+						color: { color: "#1E90FF", highlight: "#1E90FF" },
+						width: 3,
+						dashes: false,
+						shadow: { enabled: true, color: "#FF8C00", size: 8, x: 0, y: 0 },
+					});
+					return;
+				}
+
+				if (inD) {
+					edgesDataSet.update({
+						id: edge.id,
+						color: { color: "#1E90FF", highlight: "#1E90FF" },
+						width: 4,
+						dashes: false,
+						shadow: { enabled: false },
+					});
+					return;
+				}
+
+				if (inB) {
+					edgesDataSet.update({
+						id: edge.id,
+						color: { color: "#FF8C00", highlight: "#FF8C00" },
+						width: 4,
+						dashes: false,
+						shadow: { enabled: false },
+					});
+					return;
+				}
+
+				edgesDataSet.update({
+					id: edge.id,
+					color: { color: "#848484", highlight: "#848484" },
+					width: 1,
+					dashes: false,
+					shadow: { enabled: false },
+				});
+			});
 
 			document.getElementById("dijkstra-path").textContent = dResult.path.join(" → ");
 			document.getElementById("dijkstra-distance").textContent = `${dResult.distance} km`;
