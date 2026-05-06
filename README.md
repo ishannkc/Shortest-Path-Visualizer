@@ -1,17 +1,17 @@
 # Shortest Path Visualizer
 
-Kathmandu University Campus Network 
+Kathmandu University Road Network Graph
 
 ## Overview
 
 Shortest Path Visualizer is a small web app that compares Dijkstra and Bellman-Ford on a weighted
-campus road network graph. It exposes a Flask API and serves a lightweight frontend that lets you
+university road network graph. It exposes a Flask API and serves a lightweight frontend that lets you
 select source and destination nodes and view the resulting path and distance.
 
 ## Features
 
 - Compare Dijkstra and Bellman-Ford results side by side.
-- Visualize the campus road network from JSON data.
+- Visualize the university road network from JSON data.
 - Simple Flask API with endpoints for nodes, graph data, and shortest path.
 - No external shortest path helpers; algorithms are implemented from scratch.
 
@@ -19,7 +19,7 @@ select source and destination nodes and view the resulting path and distance.
 
 - Python + Flask (API)
 - Vanilla HTML/CSS/JS (frontend)
-- JSON data source for the campus graph
+- JSON data source for the road graph
 
 ## Project Structure
 
