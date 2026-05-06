@@ -1,0 +1,33 @@
+{
+	"nodes": [
+		{ "id": "Main Gate" },
+		{ "id": "Admin Block" },
+		{ "id": "Library" },
+		{ "id": "Canteen" },
+		{ "id": "CS Department" },
+		{ "id": "Hostel" },
+		{ "id": "Sports Ground" },
+		{ "id": "Medical Center" },
+		{ "id": "Central Lab" },
+		{ "id": "Engineering Block" },
+		{ "id": "Parking" },
+		{ "id": "Girls Hostel" }
+	],
+	"edges": [
+		{ "from": "Main Gate",      "to": "Admin Block",       "weight": 0.3 },
+		{ "from": "Main Gate",      "to": "Parking",           "weight": 0.2 },
+		{ "from": "Admin Block",    "to": "Library",           "weight": 0.4 },
+		{ "from": "Admin Block",    "to": "Canteen",           "weight": 0.5 },
+		{ "from": "Admin Block",    "to": "Medical Center",    "weight": 0.6 },
+		{ "from": "Library",        "to": "CS Department",     "weight": 0.3 },
+		{ "from": "Library",        "to": "Central Lab",       "weight": 0.6 },
+		{ "from": "Canteen",        "to": "Hostel",            "weight": 0.4 },
+		{ "from": "Canteen",        "to": "Sports Ground",     "weight": 0.7 },
+		{ "from": "CS Department",  "to": "Engineering Block", "weight": 0.2 },
+		{ "from": "CS Department",  "to": "Central Lab",       "weight": 0.4 },
+		{ "from": "Hostel",         "to": "Girls Hostel",      "weight": 0.3 },
+		{ "from": "Hostel",         "to": "Sports Ground",     "weight": 0.5 },
+		{ "from": "Medical Center", "to": "Girls Hostel",      "weight": 0.4 },
+		{ "from": "Parking",        "to": "Engineering Block", "weight": 0.8 }
+	]
+}
