@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KU Shortest Path Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+	:root {
+		--bg:          #f7f7f5;
+		--surface:     #ffffff;
+		--border:      #e4e4e0;
+		--border-soft: #ededea;
+		--accent:      #1a1a1a;
+		--accent-path: #2563eb;
+		--accent-src:  #16a34a;
+		--accent-dst:  #9333ea;
+		--edge-idle:   #d1d1cc;
+		--node-fill:   #ffffff;
+		--node-stroke: #c4c4be;
+		--text-primary:#1a1a1a;
+		--text-muted:  #9a9a92;
+		--text-sub:    #6b6b63;
+		--header-h:    80px;
+	}
+
+	*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+	body {
+		background: var(--bg);
+		color: var(--text-primary);
+		font-family: 'Inter', sans-serif;
+		overflow-x: hidden;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	/* header */
+	header {
+		position: fixed;
+		top: 0; left: 0; right: 0;
+		height: var(--header-h);
+		background: rgba(247,247,245,0.92);
+		backdrop-filter: blur(10px);
+		border-bottom: 1px solid var(--border);
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0 40px;
+		z-index: 100;
+	}
+
+	.logo-block {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+	.logo-block h1 {
+		font-size: 1.1rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		color: var(--text-primary);
+	}
+	.logo-sep {
+		width: 1px;
+		height: 14px;
+		background: var(--border);
+	}
+	.logo-block span {
+		font-size: 0.9rem;
+		color: var(--text-muted);
+		font-weight: 400;
+	}
+
+	.controls {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	select {
+		background: var(--surface);
+		color: var(--text-primary);
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		padding: 10px 14px;
+		font-family: 'Inter', sans-serif;
+		font-size: 0.95rem;
+		font-weight: 400;
+		cursor: pointer;
+		outline: none;
+		transition: border-color .15s;
+		color: var(--text-sub);
+	}
+	select:focus { border-color: #aaa; }
+
+	.btn-find {
+		background: var(--text-primary);
+		color: #fff;
+		border: none;
+		border-radius: 6px;
+		padding: 11px 20px;
+		font-family: 'Inter', sans-serif;
+		font-size: 0.95rem;
+		font-weight: 500;
+		letter-spacing: 0.01em;
+		cursor: pointer;
+		transition: background .15s, transform .1s;
+	}
+	.btn-find:hover { background: #333; }
+	.btn-find:active { transform: scale(0.98); }
+
+	.btn-reset {
+		background: transparent;
+		color: var(--text-muted);
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		padding: 11px 16px;
+		font-family: 'Inter', sans-serif;
+		font-size: 0.95rem;
+		cursor: pointer;
+		transition: border-color .15s, color .15s;
+	}
+	.btn-reset:hover { border-color: #999; color: var(--text-sub); }
+
+	/* graph */
+	#graph-wrap {
+		position: fixed;
+		top: var(--header-h);
+		left: 0; right: 0;
+		bottom: 0;
+		overflow: hidden;
+		background: var(--bg);
+	}
+
+	#graph-svg {
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+
+	#graph-wrap::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background-image:
+			linear-gradient(to right, rgba(180,180,174,0.45) 1px, transparent 1px),
+			linear-gradient(to bottom, rgba(180,180,174,0.45) 1px, transparent 1px);
+		background-size: 40px 40px;
+		pointer-events: none;
+		z-index: 2;
+	}
+
+	.edge {
+		stroke: var(--edge-idle);
+		stroke-width: 1.5;
+		transition: stroke .4s, stroke-width .3s;
+	}
+	.edge.path-edge {
+		stroke: var(--accent-path);
+		stroke-width: 2.5;
+	}
+	.edge-label {
+		fill: #b0b0a8;
+		font-size: 10px;
+		font-family: 'JetBrains Mono', monospace;
+		text-anchor: middle;
+		dominant-baseline: middle;
+		pointer-events: none;
+		transition: fill .3s;
+	}
+
+	.node-circle {
+		fill: var(--node-fill);
+		stroke: var(--node-stroke);
+		stroke-width: 1.5;
+		transition: fill .3s, stroke .3s, stroke-width .2s;
+		cursor: pointer;
+		filter: drop-shadow(0 1px 3px rgba(0,0,0,0.08));
+	}
+	.node-circle:hover {
+		stroke: #888;
+		stroke-width: 2;
+		filter: drop-shadow(0 2px 6px rgba(0,0,0,0.13));
+	}
+	.node-circle.on-path {
+		fill: #eff6ff;
+		stroke: var(--accent-path);
+		stroke-width: 2;
+		filter: drop-shadow(0 2px 8px rgba(37,99,235,0.18));
+	}
+	.node-circle.source-node {
+		fill: #f0fdf4;
+		stroke: var(--accent-src);
+		stroke-width: 2;
+	}
+	.node-circle.dest-node {
+		fill: #faf5ff;
+		stroke: var(--accent-dst);
+		stroke-width: 2;
+	}
+
+	.node-label {
+		fill: var(--text-sub);
+		font-size: 10px;
+		font-family: 'Inter', sans-serif;
+		font-weight: 500;
+		text-anchor: middle;
+		dominant-baseline: middle;
+		pointer-events: none;
+	}
+
+	.pulse-ring {
+		fill: none;
+		stroke: var(--accent-path);
+		stroke-width: 1;
+		opacity: 0;
+	}
+	.pulse-ring.active {
+		animation: pulse-out 1.6s ease-out infinite;
+	}
+	@keyframes pulse-out {
+		0%   { r: 22px; opacity: 0.4; }
+		100% { r: 46px; opacity: 0; }
+	}
+
+	/* scroll hint */
+	.scroll-hint {
+		position: fixed;
+		bottom: 20px;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		color: var(--text-muted);
+		font-size: 0.58rem;
+		letter-spacing: 0.1em;
+		font-weight: 500;
+		pointer-events: none;
+		animation: bounce 2.2s ease-in-out infinite;
+		z-index: 50;
+		transition: opacity 0.2s ease;
+	}
+	.scroll-hint.hidden {
+		opacity: 0;
+	}
+	@keyframes bounce {
+		0%,100% { transform: translateX(-50%) translateY(0); }
+		50%      { transform: translateX(-50%) translateY(5px); }
+	}
+
+	/* footer */
+	.footer-spacer { height: 100vh; }
+
+	footer {
+		position: relative;
+		background: var(--surface);
+		border-top: 1px solid var(--border);
+		padding: 40px 0 52px;
+		z-index: 10;
+	}
+
+	.footer-inner {
+		max-width: 100%;
+		margin: 0 auto;
+		padding: 0 80px;
+	}
+
+	.results-layout {
+		display: grid;
+		grid-template-columns: minmax(320px, 1fr) minmax(420px, 1.4fr);
+		gap: 0 72px;
+		margin-bottom: 56px;
+		align-items: start;
+	}
+	.results-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0 72px;
+		align-self: center;
+	}
+
+	.algo-panel h2 {
+		font-size: 0.92rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+		margin-bottom: 20px;
+		display: flex;
+		align-items: center;
+		gap: 7px;
+	}
+	.algo-panel h2::before {
+		content: '';
+		display: inline-block;
+		width: 6px; height: 6px;
+		border-radius: 50%;
+		background: var(--accent-path);
+		flex-shrink: 0;
+	}
+
+	.result-rows { display: flex; flex-direction: column; gap: 12px; }
+
+	.result-row {
+		display: flex;
+		align-items: baseline;
+		gap: 14px;
+		font-size: 1rem;
+	}
+	.result-row .label {
+		color: var(--text-muted);
+		min-width: 72px;
+		font-size: 0.8rem;
+		font-weight: 500;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		flex-shrink: 0;
+	}
+	.result-row .value {
+		color: var(--text-sub);
+		word-break: break-all;
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.95rem;
+	}
+	.result-row .value.highlight {
+		color: var(--accent-path);
+		font-weight: 500;
+	}
+
+	.compare-section { margin-top: 0; }
+	.compare-section h3 {
+		font-size: 0.84rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+		margin-bottom: 14px;
+	}
+	@media (max-width: 980px) {
+		.results-layout {
+			grid-template-columns: 1fr;
+			gap: 32px 0;
+		}
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.95rem;
+		table-layout: fixed;
+	}
+	thead tr { border-bottom: 1px solid var(--border); }
+	thead th {
+		padding: 12px 20px;
+		text-align: left;
+		font-weight: 500;
+		font-size: 0.84rem;
+		letter-spacing: 0.05em;
+		color: var(--text-muted);
+	}
+	thead th:nth-child(2) { color: var(--accent-path); }
+	#compare-table th:nth-child(1),
+	#compare-table td:nth-child(1) {
+		width: 40%;
+	}
+	#compare-table th:nth-child(2),
+	#compare-table td:nth-child(2) {
+		width: 60%;
+		text-align: left;
+	}
+
+	tbody tr { border-bottom: 1px solid var(--border-soft); transition: background .12s; }
+	tbody tr:hover { background: #fafaf8; }
+	tbody td { padding: 14px 20px; color: var(--text-sub); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+	tbody td:first-child {
+		color: var(--text-muted);
+		font-family: 'Inter', sans-serif;
+		font-size: 0.82rem;
+		font-weight: 500;
+		letter-spacing: 0.04em;
+	}
+
+	.badge {
+		display: inline-block;
+		padding: 4px 12px;
+		border-radius: 4px;
+		font-size: 0.78rem;
+		font-family: 'JetBrains Mono', monospace;
+		letter-spacing: 0.03em;
+		border: 1px solid transparent;
+	}
+	.badge-blue   { background: #eff6ff; color: var(--accent-path); border-color: #bfdbfe; }
+	.badge-red    { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+
+	.legend {
+		display: flex;
+		gap: 20px;
+		margin-top: 28px;
+		flex-wrap: wrap;
+		padding-top: 20px;
+		border-top: 1px solid var(--border-soft);
+	}
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		font-size: 0.84rem;
+		color: var(--text-muted);
+		font-weight: 500;
+		letter-spacing: 0.04em;
+	}
+	.legend-dot {
+		width: 9px; height: 9px;
+		border-radius: 50%;
+		border: 1.5px solid currentColor;
+		flex-shrink: 0;
+	}
+	.ld-default { color: #9a9a92; background: #fff; }
+	.ld-src     { color: var(--accent-src);  background: #f0fdf4; }
+	.ld-dst     { color: var(--accent-dst);  background: #faf5ff; }
+	.ld-path    { color: var(--accent-path); background: #eff6ff; }
+</style>
+</head>
+<body>
+
+<header>
+	<div class="logo-block">
+		<h1>KU Shortest Path</h1>
+		<div class="logo-sep"></div>
+		<span>Kathmandu University</span>
+	</div>
+	<div class="controls">
+		<select id="src-select">
+			<option value="">Source Node</option>
+		</select>
+		<select id="dst-select">
+			<option value="">Destination Node</option>
+		</select>
+		<button class="btn-find" onclick="findPath()">▶ Find Path</button>
+		<button class="btn-reset" onclick="resetGraph()">Reset</button>
+	</div>
+</header>
+
+<div id="graph-wrap">
+	<svg id="graph-svg" xmlns="http://www.w3.org/2000/svg">
+		<defs>
+			<marker id="arrowhead" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+				<polygon points="0 0, 8 3, 0 6" fill="rgba(0,229,255,0.35)" />
+			</marker>
+			<marker id="arrowhead-path" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+				<polygon points="0 0, 8 3, 0 6" fill="#ff6b35" />
+			</marker>
+		</defs>
+		<g id="edges-layer"></g>
+		<g id="nodes-layer"></g>
+	</svg>
+</div>
+
+<div class="scroll-hint">
+	<span>SCROLL FOR RESULTS</span>
+	<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9a9a92" stroke-width="2">
+		<polyline points="6 9 12 15 18 9"/>
+	</svg>
+</div>
+
+<div class="footer-spacer"></div>
+
+<footer>
+	<div class="footer-inner">
+
+		<div class="results-layout">
+			<div class="results-grid">
+				<div class="algo-panel" id="dijkstra-panel">
+					<h2>⬡ Dijkstra Algorithm Results</h2>
+					<div class="result-rows">
+						<div class="result-row">
+							<span class="label">PATH</span>
+							<span class="value highlight" id="d-path">—</span>
+						</div>
+						<div class="result-row">
+							<span class="label">DISTANCE</span>
+							<span class="value highlight" id="d-dist">—</span>
+						</div>
+						<div class="result-row">
+							<span class="label">STEPS</span>
+							<span class="value" id="d-steps">—</span>
+						</div>
+						<div class="result-row">
+							<span class="label">TIME</span>
+							<span class="value" id="d-time">—</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="compare-section">
+				<h3>Metrics</h3>
+				<table id="compare-table">
+					<thead>
+						<tr>
+							<th>Metric</th>
+							<th>Value</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>Path Length</td>
+							<td id="ct-d-path">—</td>
+						</tr>
+						<tr>
+							<td>Total Distance</td>
+							<td id="ct-d-dist">—</td>
+						</tr>
+						<tr>
+							<td>Iterations</td>
+							<td id="ct-d-iter">—</td>
+						</tr>
+						<tr>
+							<td>Complexity</td>
+							<td><span class="badge badge-blue">O((V+E) log V)</span></td>
+						</tr>
+						<tr>
+							<td>Negative Weights</td>
+							<td><span class="badge badge-red">✗ No</span></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<div class="legend">
+			<div class="legend-item"><div class="legend-dot ld-default"></div> Default Node</div>
+			<div class="legend-item"><div class="legend-dot ld-src"></div> Source</div>
+			<div class="legend-item"><div class="legend-dot ld-dst"></div> Destination</div>
+			<div class="legend-item"><div class="legend-dot ld-path"></div> Shortest Path</div>
+		</div>
+	</div>
+</footer>
+
+<script>
+const NODES = [
+	{ id: 'Main Gate',       label: 'Main Gate' },
+	{ id: 'Library',         label: 'Library' },
+	{ id: 'Admin Block',     label: 'Admin Block' },
+	{ id: 'Central Plaza',   label: 'Central Plaza' },
+	{ id: 'Engineering',     label: 'Engineering' },
+	{ id: 'Science Block',   label: 'Science Block' },
+	{ id: 'Medical Block',   label: 'Medical Block' },
+	{ id: 'Sports Arena',    label: 'Sports Arena' },
+	{ id: 'Hostel Area',     label: 'Hostel Area' },
+	{ id: 'New Hostel',      label: 'New Hostel' },
+	{ id: 'Canteen',         label: 'Canteen' },
+	{ id: 'Auditorium',      label: 'Auditorium' },
+	{ id: 'Research Park',   label: 'Research Park' },
+];
+
+const EDGES_DEF = [
+	{ from: 'Main Gate',     to: 'Library',       w: 0.4 },
+	{ from: 'Main Gate',     to: 'Admin Block',   w: 0.6 },
+	{ from: 'Library',       to: 'Admin Block',   w: 0.3 },
+	{ from: 'Library',       to: 'Central Plaza', w: 0.2 },
+	{ from: 'Admin Block',   to: 'Central Plaza', w: 0.4 },
+	{ from: 'Central Plaza', to: 'Engineering',   w: 0.5 },
+	{ from: 'Central Plaza', to: 'Canteen',       w: 0.3 },
+	{ from: 'Engineering',   to: 'Science Block', w: 0.7 },
+	{ from: 'Engineering',   to: 'Auditorium',    w: 0.4 },
+	{ from: 'Science Block', to: 'Medical Block', w: 0.5 },
+	{ from: 'Science Block', to: 'Research Park', w: 0.3 },
+	{ from: 'Canteen',       to: 'Sports Arena',  w: 0.8 },
+	{ from: 'Canteen',       to: 'New Hostel',    w: 0.2 },
+	{ from: 'Sports Arena',  to: 'Hostel Area',   w: 0.2 },
+	{ from: 'New Hostel',    to: 'Hostel Area',   w: 0.6 },
+	{ from: 'Hostel Area',   to: 'Medical Block', w: 0.4 },
+	{ from: 'Medical Block', to: 'Research Park', w: 0.3 },
+	{ from: 'Auditorium',    to: 'Research Park', w: 0.4 },
+];
+
+const POSITIONS_NORM = {
+	'Main Gate':     [0.50, 0.10],
+	'Library':       [0.34, 0.22],
+	'Admin Block':   [0.62, 0.20],
+	'Central Plaza': [0.48, 0.35],
+	'Engineering':   [0.68, 0.42],
+	'Science Block': [0.82, 0.30],
+	'Medical Block': [0.82, 0.55],
+	'Canteen':       [0.30, 0.50],
+	'Sports Arena':  [0.18, 0.65],
+	'New Hostel':    [0.33, 0.68],
+	'Hostel Area':   [0.20, 0.82],
+	'Auditorium':    [0.54, 0.60],
+	'Research Park': [0.72, 0.75],
+};
+
+const svg   = document.getElementById('graph-svg');
+const eLayer = document.getElementById('edges-layer');
+const nLayer = document.getElementById('nodes-layer');
+let W, H;
+
+function getPos(id) {
+	const [nx, ny] = POSITIONS_NORM[id];
+	return { x: nx * W, y: ny * H };
+}
+
+function buildGraph() {
+	W = svg.clientWidth; H = svg.clientHeight;
+	eLayer.innerHTML = ''; nLayer.innerHTML = '';
+
+	EDGES_DEF.forEach(e => {
+		const a = getPos(e.from), b = getPos(e.to);
+		const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+
+		const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+		line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
+		line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+		line.classList.add('edge');
+		line.dataset.from = e.from; line.dataset.to = e.to;
+		eLayer.appendChild(line);
+
+		const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+		lbl.setAttribute('x', mx); lbl.setAttribute('y', my - 7);
+		lbl.classList.add('edge-label');
+		lbl.dataset.from = e.from; lbl.dataset.to = e.to;
+		lbl.textContent = e.w.toFixed(1);
+		eLayer.appendChild(lbl);
+	});
+
+	NODES.forEach(n => {
+		const { x, y } = getPos(n.id);
+		const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+		g.dataset.id = n.id;
+		g.style.cursor = 'pointer';
+
+		const pulse = document.createElementNS('http://www.w3.org/2000/svg','circle');
+		pulse.setAttribute('cx', x); pulse.setAttribute('cy', y); pulse.setAttribute('r', 20);
+		pulse.classList.add('pulse-ring');
+		g.appendChild(pulse);
+
+		const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+		c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 20);
+		c.classList.add('node-circle');
+		g.appendChild(c);
+
+		const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+		lbl.setAttribute('x', x); lbl.setAttribute('y', y + 34);
+		lbl.classList.add('node-label');
+		lbl.textContent = n.label;
+		g.appendChild(lbl);
+
+		g.addEventListener('click', () => nodeClick(n.id));
+		nLayer.appendChild(g);
+	});
+}
+
+let clickState = 0;
+
+function nodeClick(id) {
+	const srcSel = document.getElementById('src-select');
+	const dstSel = document.getElementById('dst-select');
+	if (clickState === 0) {
+		srcSel.value = id;
+		updateNodeVisuals();
+		clickState = 1;
+	} else {
+		dstSel.value = id;
+		updateNodeVisuals();
+		clickState = 0;
+	}
+}
+
+function updateNodeVisuals() {
+	const src = document.getElementById('src-select').value;
+	const dst = document.getElementById('dst-select').value;
+	document.querySelectorAll('.node-circle').forEach(c => {
+		const id = c.parentElement.dataset.id;
+		c.classList.remove('source-node','dest-node','on-path');
+		if (id === src) c.classList.add('source-node');
+		if (id === dst) c.classList.add('dest-node');
+	});
+}
+
+function populateSelects() {
+	['src-select','dst-select'].forEach(sid => {
+		const sel = document.getElementById(sid);
+		const first = sel.options[0];
+		sel.innerHTML = '';
+		sel.appendChild(first);
+		NODES.forEach(n => {
+			const o = document.createElement('option');
+			o.value = n.id; o.textContent = n.id;
+			sel.appendChild(o);
+		});
+	});
+}
+
+function dijkstra(src, dst) {
+	const t0 = performance.now();
+	const dist = {}; const prev = {}; const visited = new Set();
+	NODES.forEach(n => { dist[n.id] = Infinity; prev[n.id] = null; });
+	dist[src] = 0;
+	let steps = 0;
+
+	while (true) {
+		let u = null;
+		NODES.forEach(n => {
+			if (!visited.has(n.id) && (u === null || dist[n.id] < dist[u])) u = n.id;
+		});
+		if (!u || dist[u] === Infinity) break;
+		visited.add(u); steps++;
+		if (u === dst) break;
+
+		EDGES_DEF.forEach(e => {
+			let nb = null;
+			if (e.from === u) nb = e.to;
+			else if (e.to === u) nb = e.from;
+			if (nb && !visited.has(nb)) {
+				const nd = dist[u] + e.w;
+				if (nd < dist[nb]) { dist[nb] = nd; prev[nb] = u; }
+			}
+		});
+	}
+
+	const path = []; let cur = dst;
+	while (cur) { path.unshift(cur); cur = prev[cur]; }
+	const t1 = performance.now();
+	return { path: dist[dst] < Infinity ? path : [], dist: dist[dst], steps, time: (t1-t0).toFixed(3) };
+}
+
+function highlightPath(pathArr) {
+	document.querySelectorAll('.edge').forEach(e => e.classList.remove('path-edge'));
+
+	const pathSet = new Set();
+	for (let i = 0; i < pathArr.length - 1; i++) {
+		const a = pathArr[i], b = pathArr[i+1];
+		pathSet.add(a+'|'+b); pathSet.add(b+'|'+a);
+	}
+
+	document.querySelectorAll('.edge').forEach(e => {
+		const key = e.dataset.from+'|'+e.dataset.to;
+		if (pathSet.has(key)) e.classList.add('path-edge');
+	});
+
+	document.querySelectorAll('.node-circle').forEach(c => {
+		const id = c.parentElement.dataset.id;
+		if (pathArr.includes(id)) c.classList.add('on-path');
+	});
+
+	const src = pathArr[0], dst = pathArr[pathArr.length-1];
+	document.querySelectorAll('.pulse-ring').forEach(r => {
+		const id = r.parentElement.dataset.id;
+		r.classList.toggle('active', id === src || id === dst);
+	});
+}
+
+function findPath() {
+	const src = document.getElementById('src-select').value;
+	const dst = document.getElementById('dst-select').value;
+	if (!src || !dst) { alert('Please select both Source and Destination.'); return; }
+	if (src === dst) { alert('Source and Destination must be different.'); return; }
+
+	const dRes = dijkstra(src, dst);
+
+	const fmt = r => r.path.length ? r.path.join(' → ') : 'No path';
+	const fmtD = r => r.dist < Infinity ? r.dist.toFixed(2) : '∞';
+
+	document.getElementById('d-path').textContent  = fmt(dRes);
+	document.getElementById('d-dist').textContent  = fmtD(dRes);
+	document.getElementById('d-steps').textContent = dRes.steps;
+	document.getElementById('d-time').textContent  = dRes.time + ' ms';
+
+	document.getElementById('ct-d-path').textContent = dRes.path.length ? dRes.path.length + ' nodes' : '—';
+	document.getElementById('ct-d-dist').textContent = fmtD(dRes);
+	document.getElementById('ct-d-iter').textContent = dRes.steps;
+
+	updateNodeVisuals();
+	highlightPath(dRes.path.length ? dRes.path : []);
+
+	setTimeout(() => {
+		document.querySelector('footer').scrollIntoView({ behavior: 'smooth' });
+	}, 200);
+}
+
+function resetGraph() {
+	document.getElementById('src-select').value = '';
+	document.getElementById('dst-select').value = '';
+	document.querySelectorAll('.node-circle').forEach(c =>
+		c.classList.remove('source-node','dest-node','on-path'));
+	document.querySelectorAll('.edge').forEach(e => e.classList.remove('path-edge'));
+	document.querySelectorAll('.pulse-ring').forEach(r => r.classList.remove('active'));
+	['d-path','d-dist','d-steps','d-time','ct-d-path','ct-d-dist','ct-d-iter']
+		.forEach(id => document.getElementById(id).textContent = '—');
+	clickState = 0;
+	window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+populateSelects();
+buildGraph();
+
+const scrollHint = document.querySelector('.scroll-hint');
+const footerEl = document.querySelector('footer');
+if (scrollHint && footerEl) {
+	const hintObserver = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				scrollHint.classList.toggle('hidden', entry.isIntersecting);
+			});
+		},
+		{ threshold: 0.05 }
+	);
+	 hintObserver.observe(footerEl);
+}
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+	clearTimeout(resizeTimer);
+	resizeTimer = setTimeout(buildGraph, 120);
+});
+
+['src-select','dst-select'].forEach(id => {
+	document.getElementById(id).addEventListener('change', () => {
+		updateNodeVisuals();
+		clickState = 0;
+	});
+});
+</script>
+</body>
+</html>
