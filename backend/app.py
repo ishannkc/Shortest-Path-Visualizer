@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 
@@ -13,7 +12,7 @@ if ROOT_DIR not in sys.path:
 
 from algorithms.bellman_ford import bellman_ford
 from algorithms.dijkstra import dijkstra
-from backend.graph_builder import load_graph
+from backend.graph_builder import load_graph, load_graph_data
 
 
 app = Flask(__name__)
@@ -24,10 +23,7 @@ ADJ_LIST, EDGE_LIST, NODES, _ = load_graph()
 
 @app.get("/graph")
 def get_graph():
-	data_path = os.path.normpath(os.path.join(BASE_DIR, "..", "data", "graph_data.json"))
-	with open(data_path, "r", encoding="utf-8") as file:
-		data = json.load(file)
-	return jsonify(data)
+	return jsonify(load_graph_data())
 
 
 @app.get("/")

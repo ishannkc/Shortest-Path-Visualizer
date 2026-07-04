@@ -122,6 +122,24 @@
 	}
 	.btn-reset:hover { border-color: #999; color: var(--text-sub); }
 
+	.error-banner {
+		position: fixed;
+		top: calc(var(--header-h) + 16px);
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 120;
+		max-width: calc(100vw - 32px);
+		padding: 10px 14px;
+		border-radius: 999px;
+		border: 1px solid #fecdd3;
+		background: rgba(255, 241, 242, 0.96);
+		color: #9f1239;
+		font-size: 0.88rem;
+		font-weight: 500;
+		box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+		display: none;
+	}
+
 	/* graph */
 	#graph-wrap {
 		position: fixed;
@@ -157,7 +175,7 @@
 	}
 	.edge.path-edge {
 		stroke: var(--accent-path);
-		stroke-width: 2.5;
+		stroke-width: 3;
 	}
 	.edge-label {
 		fill: #b0b0a8;
@@ -426,6 +444,8 @@
 	</div>
 </header>
 
+<div id="error-msg" class="error-banner" role="status" aria-live="polite"></div>
+
 <div id="graph-wrap">
 	<svg id="graph-svg" xmlns="http://www.w3.org/2000/svg">
 		<defs>
@@ -551,311 +571,367 @@
 </footer>
 
 <script>
-const NODES = [
-	{ id: 'Main Gate',       label: 'Main Gate' },
-	{ id: 'Library',         label: 'Library' },
-	{ id: 'Admin Block',     label: 'Admin Block' },
-	{ id: 'Central Plaza',   label: 'Central Plaza' },
-	{ id: 'Engineering',     label: 'Engineering' },
-	{ id: 'Science Block',   label: 'Science Block' },
-	{ id: 'Medical Block',   label: 'Medical Block' },
-	{ id: 'Sports Arena',    label: 'Sports Arena' },
-	{ id: 'Hostel Area',     label: 'Hostel Area' },
-	{ id: 'New Hostel',      label: 'New Hostel' },
-	{ id: 'Canteen',         label: 'Canteen' },
-	{ id: 'Auditorium',      label: 'Auditorium' },
-	{ id: 'Research Park',   label: 'Research Park' },
-];
+const API_BASE = "";
 
-const EDGES_DEF = [
-	{ from: 'Main Gate',     to: 'Library',       w: 0.4 },
-	{ from: 'Main Gate',     to: 'Admin Block',   w: 0.6 },
-	{ from: 'Library',       to: 'Admin Block',   w: 0.3 },
-	{ from: 'Library',       to: 'Central Plaza', w: 0.2 },
-	{ from: 'Admin Block',   to: 'Central Plaza', w: 0.4 },
-	{ from: 'Central Plaza', to: 'Engineering',   w: 0.5 },
-	{ from: 'Central Plaza', to: 'Canteen',       w: 0.3 },
-	{ from: 'Engineering',   to: 'Science Block', w: 0.7 },
-	{ from: 'Engineering',   to: 'Auditorium',    w: 0.4 },
-	{ from: 'Science Block', to: 'Medical Block', w: 0.5 },
-	{ from: 'Science Block', to: 'Research Park', w: 0.3 },
-	{ from: 'Canteen',       to: 'Sports Arena',  w: 0.8 },
-	{ from: 'Canteen',       to: 'New Hostel',    w: 0.2 },
-	{ from: 'Sports Arena',  to: 'Hostel Area',   w: 0.2 },
-	{ from: 'New Hostel',    to: 'Hostel Area',   w: 0.6 },
-	{ from: 'Hostel Area',   to: 'Medical Block', w: 0.4 },
-	{ from: 'Medical Block', to: 'Research Park', w: 0.3 },
-	{ from: 'Auditorium',    to: 'Research Park', w: 0.4 },
-];
+const svg = document.getElementById("graph-svg");
+const edgeLayer = document.getElementById("edges-layer");
+const nodeLayer = document.getElementById("nodes-layer");
+const srcSelect = document.getElementById("src-select");
+const dstSelect = document.getElementById("dst-select");
+const errorEl = document.getElementById("error-msg");
 
-const POSITIONS_NORM = {
-	'Main Gate':     [0.50, 0.10],
-	'Library':       [0.34, 0.22],
-	'Admin Block':   [0.62, 0.20],
-	'Central Plaza': [0.48, 0.35],
-	'Engineering':   [0.68, 0.42],
-	'Science Block': [0.82, 0.30],
-	'Medical Block': [0.82, 0.55],
-	'Canteen':       [0.30, 0.50],
-	'Sports Arena':  [0.18, 0.65],
-	'New Hostel':    [0.33, 0.68],
-	'Hostel Area':   [0.20, 0.82],
-	'Auditorium':    [0.54, 0.60],
-	'Research Park': [0.72, 0.75],
-};
+let graphData = null;
+let clickState = 0;
+let resizeTimer = null;
+let W = 1;
+let H = 1;
 
-const svg   = document.getElementById('graph-svg');
-const eLayer = document.getElementById('edges-layer');
-const nLayer = document.getElementById('nodes-layer');
-let W, H;
+function setError(message) {
+	if (message) {
+		errorEl.textContent = message;
+		errorEl.style.display = "inline-flex";
+	} else {
+		errorEl.textContent = "";
+		errorEl.style.display = "none";
+	}
+}
 
-function getPos(id) {
-	const [nx, ny] = POSITIONS_NORM[id];
-	return { x: nx * W, y: ny * H };
+function getPos(nodeId) {
+	const node = graphData.nodes.find((entry) => entry.id === nodeId);
+	if (!node) {
+		return { x: 0, y: 0 };
+	}
+
+	return {
+		x: node.x * W,
+		y: node.y * H,
+	};
+}
+
+function splitLabel(label, maxLineLength = 16) {
+	const words = label.split(" ");
+	const lines = [];
+	let currentLine = "";
+
+	words.forEach((word) => {
+		const nextLine = currentLine ? `${currentLine} ${word}` : word;
+		if (nextLine.length > maxLineLength && currentLine) {
+			lines.push(currentLine);
+			currentLine = word;
+			return;
+		}
+
+		currentLine = nextLine;
+	});
+
+	if (currentLine) {
+		lines.push(currentLine);
+	}
+
+	return lines.slice(0, 3);
+}
+
+function appendWrappedLabel(textNode, label, x, y) {
+	const lines = splitLabel(label);
+	const startY = y + 30 - ((lines.length - 1) * 6);
+	textNode.setAttribute("x", x);
+	textNode.setAttribute("y", startY);
+
+	lines.forEach((line, index) => {
+		const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+		tspan.setAttribute("x", x);
+		tspan.setAttribute("dy", index === 0 ? "0" : "12");
+		tspan.textContent = line;
+		textNode.appendChild(tspan);
+	});
 }
 
 function buildGraph() {
-	W = svg.clientWidth; H = svg.clientHeight;
-	eLayer.innerHTML = ''; nLayer.innerHTML = '';
-
-	EDGES_DEF.forEach(e => {
-		const a = getPos(e.from), b = getPos(e.to);
-		const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-
-		const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-		line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
-		line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
-		line.classList.add('edge');
-		line.dataset.from = e.from; line.dataset.to = e.to;
-		eLayer.appendChild(line);
-
-		const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
-		lbl.setAttribute('x', mx); lbl.setAttribute('y', my - 7);
-		lbl.classList.add('edge-label');
-		lbl.dataset.from = e.from; lbl.dataset.to = e.to;
-		lbl.textContent = e.w.toFixed(1);
-		eLayer.appendChild(lbl);
-	});
-
-	NODES.forEach(n => {
-		const { x, y } = getPos(n.id);
-		const g = document.createElementNS('http://www.w3.org/2000/svg','g');
-		g.dataset.id = n.id;
-		g.style.cursor = 'pointer';
-
-		const pulse = document.createElementNS('http://www.w3.org/2000/svg','circle');
-		pulse.setAttribute('cx', x); pulse.setAttribute('cy', y); pulse.setAttribute('r', 20);
-		pulse.classList.add('pulse-ring');
-		g.appendChild(pulse);
-
-		const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
-		c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 20);
-		c.classList.add('node-circle');
-		g.appendChild(c);
-
-		const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
-		lbl.setAttribute('x', x); lbl.setAttribute('y', y + 34);
-		lbl.classList.add('node-label');
-		lbl.textContent = n.label;
-		g.appendChild(lbl);
-
-		g.addEventListener('click', () => nodeClick(n.id));
-		nLayer.appendChild(g);
-	});
-}
-
-let clickState = 0;
-
-function nodeClick(id) {
-	const srcSel = document.getElementById('src-select');
-	const dstSel = document.getElementById('dst-select');
-	if (clickState === 0) {
-		srcSel.value = id;
-		updateNodeVisuals();
-		clickState = 1;
-	} else {
-		dstSel.value = id;
-		updateNodeVisuals();
-		clickState = 0;
+	if (!graphData) {
+		return;
 	}
-}
 
-function updateNodeVisuals() {
-	const src = document.getElementById('src-select').value;
-	const dst = document.getElementById('dst-select').value;
-	document.querySelectorAll('.node-circle').forEach(c => {
-		const id = c.parentElement.dataset.id;
-		c.classList.remove('source-node','dest-node','on-path');
-		if (id === src) c.classList.add('source-node');
-		if (id === dst) c.classList.add('dest-node');
+	W = svg.clientWidth;
+	H = svg.clientHeight;
+	edgeLayer.innerHTML = "";
+	nodeLayer.innerHTML = "";
+
+	graphData.edges.forEach((edge, index) => {
+		const fromPosition = getPos(edge.from);
+		const toPosition = getPos(edge.to);
+		const midX = (fromPosition.x + toPosition.x) / 2;
+		const midY = (fromPosition.y + toPosition.y) / 2;
+
+		const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+		line.setAttribute("x1", fromPosition.x);
+		line.setAttribute("y1", fromPosition.y);
+		line.setAttribute("x2", toPosition.x);
+		line.setAttribute("y2", toPosition.y);
+		line.classList.add("edge");
+		line.dataset.index = String(index);
+		line.dataset.from = edge.from;
+		line.dataset.to = edge.to;
+		edgeLayer.appendChild(line);
+
+		const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+		label.setAttribute("x", midX);
+		label.setAttribute("y", midY - 7);
+		label.classList.add("edge-label");
+		label.dataset.index = String(index);
+		label.textContent = edge.weight.toFixed(2);
+		edgeLayer.appendChild(label);
 	});
+
+	graphData.nodes.forEach((node) => {
+		const { x, y } = getPos(node.id);
+		const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+		group.dataset.id = node.id;
+		group.style.cursor = "pointer";
+
+		const pulse = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+		pulse.setAttribute("cx", x);
+		pulse.setAttribute("cy", y);
+		pulse.setAttribute("r", 20);
+		pulse.classList.add("pulse-ring");
+		group.appendChild(pulse);
+
+		const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+		circle.setAttribute("cx", x);
+		circle.setAttribute("cy", y);
+		circle.setAttribute("r", 20);
+		circle.classList.add("node-circle");
+		group.appendChild(circle);
+
+		const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+		label.classList.add("node-label");
+		appendWrappedLabel(label, node.id, x, y);
+		group.appendChild(label);
+
+		group.addEventListener("click", () => nodeClick(node.id));
+		nodeLayer.appendChild(group);
+	});
+
+	updateNodeVisuals();
 }
 
 function populateSelects() {
-	['src-select','dst-select'].forEach(sid => {
-		const sel = document.getElementById(sid);
-		const first = sel.options[0];
-		sel.innerHTML = '';
-		sel.appendChild(first);
-		NODES.forEach(n => {
-			const o = document.createElement('option');
-			o.value = n.id; o.textContent = n.id;
-			sel.appendChild(o);
-		});
+	const placeholderSource = srcSelect.options[0];
+	const placeholderDestination = dstSelect.options[0];
+
+	srcSelect.innerHTML = "";
+	dstSelect.innerHTML = "";
+	srcSelect.appendChild(placeholderSource);
+	dstSelect.appendChild(placeholderDestination);
+
+	graphData.nodes.forEach((node) => {
+		const sourceOption = document.createElement("option");
+		sourceOption.value = node.id;
+		sourceOption.textContent = node.id;
+		srcSelect.appendChild(sourceOption);
+
+		const destinationOption = document.createElement("option");
+		destinationOption.value = node.id;
+		destinationOption.textContent = node.id;
+		dstSelect.appendChild(destinationOption);
 	});
 }
 
-function dijkstra(src, dst) {
-	const t0 = performance.now();
-	const dist = {}; const prev = {}; const visited = new Set();
-	NODES.forEach(n => { dist[n.id] = Infinity; prev[n.id] = null; });
-	dist[src] = 0;
-	let steps = 0;
+function updateNodeVisuals() {
+	const src = srcSelect.value;
+	const dst = dstSelect.value;
+	document.querySelectorAll(".node-circle").forEach((circle) => {
+		const nodeId = circle.parentElement.dataset.id;
+		circle.classList.remove("source-node", "dest-node", "on-path");
+		if (nodeId === src) {
+			circle.classList.add("source-node");
+		}
+		if (nodeId === dst) {
+			circle.classList.add("dest-node");
+		}
+	});
+}
 
-	while (true) {
-		let u = null;
-		NODES.forEach(n => {
-			if (!visited.has(n.id) && (u === null || dist[n.id] < dist[u])) u = n.id;
-		});
-		if (!u || dist[u] === Infinity) break;
-		visited.add(u); steps++;
-		if (u === dst) break;
-
-		EDGES_DEF.forEach(e => {
-			let nb = null;
-			if (e.from === u) nb = e.to;
-			else if (e.to === u) nb = e.from;
-			if (nb && !visited.has(nb)) {
-				const nd = dist[u] + e.w;
-				if (nd < dist[nb]) { dist[nb] = nd; prev[nb] = u; }
-			}
-		});
+function nodeClick(nodeId) {
+	if (clickState === 0) {
+		srcSelect.value = nodeId;
+		clickState = 1;
+	} else {
+		dstSelect.value = nodeId;
+		clickState = 0;
 	}
-
-	const path = []; let cur = dst;
-	while (cur) { path.unshift(cur); cur = prev[cur]; }
-	const t1 = performance.now();
-	return { path: dist[dst] < Infinity ? path : [], dist: dist[dst], steps, time: (t1-t0).toFixed(3) };
-}
-
-function bellmanFord(src, dst) {
-	const t0 = performance.now();
-	const dist = {}; const prev = {};
-	NODES.forEach(n => { dist[n.id] = Infinity; prev[n.id] = null; });
-	dist[src] = 0;
-	let steps = 0;
-
-	for (let i = 0; i < NODES.length - 1; i++) {
-		let updated = false;
-		EDGES_DEF.forEach(e => {
-			[[e.from,e.to],[e.to,e.from]].forEach(([u,v]) => {
-				steps++;
-				if (dist[u] + e.w < dist[v]) {
-					dist[v] = dist[u] + e.w;
-					prev[v] = u;
-					updated = true;
-				}
-			});
-		});
-		if (!updated) break;
-	}
-
-	const path = []; let cur = dst;
-	while (cur) { path.unshift(cur); cur = prev[cur]; }
-	const t1 = performance.now();
-	return { path: dist[dst] < Infinity ? path : [], dist: dist[dst], steps, time: (t1-t0).toFixed(3) };
-}
-
-function highlightPath(pathArr) {
-	document.querySelectorAll('.edge').forEach(e => e.classList.remove('path-edge'));
-
-	const pathSet = new Set();
-	for (let i = 0; i < pathArr.length - 1; i++) {
-		const a = pathArr[i], b = pathArr[i+1];
-		pathSet.add(a+'|'+b); pathSet.add(b+'|'+a);
-	}
-
-	document.querySelectorAll('.edge').forEach(e => {
-		const key = e.dataset.from+'|'+e.dataset.to;
-		if (pathSet.has(key)) e.classList.add('path-edge');
-	});
-
-	document.querySelectorAll('.node-circle').forEach(c => {
-		const id = c.parentElement.dataset.id;
-		if (pathArr.includes(id)) c.classList.add('on-path');
-	});
-
-	const src = pathArr[0], dst = pathArr[pathArr.length-1];
-	document.querySelectorAll('.pulse-ring').forEach(r => {
-		const id = r.parentElement.dataset.id;
-		r.classList.toggle('active', id === src || id === dst);
-	});
-}
-
-function findPath() {
-	const src = document.getElementById('src-select').value;
-	const dst = document.getElementById('dst-select').value;
-	if (!src || !dst) { alert('Please select both Source and Destination.'); return; }
-	if (src === dst) { alert('Source and Destination must be different.'); return; }
-
-	const dRes = dijkstra(src, dst);
-	const bRes = bellmanFord(src, dst);
-
-	const fmt = r => r.path.length ? r.path.join(' → ') : 'No path';
-	const fmtD = r => r.dist < Infinity ? r.dist.toFixed(2) : '∞';
-
-	document.getElementById('d-path').textContent  = fmt(dRes);
-	document.getElementById('d-dist').textContent  = fmtD(dRes);
-	document.getElementById('d-steps').textContent = dRes.steps;
-	document.getElementById('d-time').textContent  = dRes.time + ' ms';
-
-	document.getElementById('b-path').textContent  = fmt(bRes);
-	document.getElementById('b-dist').textContent  = fmtD(bRes);
-	document.getElementById('b-steps').textContent = bRes.steps;
-	document.getElementById('b-time').textContent  = bRes.time + ' ms';
-
-	document.getElementById('ct-d-path').textContent = dRes.path.length ? dRes.path.length + ' nodes' : '—';
-	document.getElementById('ct-b-path').textContent = bRes.path.length ? bRes.path.length + ' nodes' : '—';
-	document.getElementById('ct-d-dist').textContent = fmtD(dRes);
-	document.getElementById('ct-b-dist').textContent = fmtD(bRes);
-	document.getElementById('ct-d-iter').textContent = dRes.steps;
-	document.getElementById('ct-b-iter').textContent = bRes.steps;
 
 	updateNodeVisuals();
-	highlightPath(dRes.path.length ? dRes.path : bRes.path);
+}
 
-	setTimeout(() => {
-		document.querySelector('footer').scrollIntoView({ behavior: 'smooth' });
-	}, 200);
+function findEdgeIndex(fromNode, toNode) {
+	return graphData.edges.findIndex(
+		(edge) =>
+			(edge.from === fromNode && edge.to === toNode) ||
+			(edge.from === toNode && edge.to === fromNode)
+	);
+}
+
+function highlightPath(path) {
+	document.querySelectorAll(".edge").forEach((edge) => edge.classList.remove("path-edge"));
+	document.querySelectorAll(".node-circle").forEach((circle) => circle.classList.remove("on-path"));
+	document.querySelectorAll(".pulse-ring").forEach((ring) => ring.classList.remove("active"));
+
+	if (!path || path.length < 2) {
+		return;
+	}
+
+	const pathEdges = new Set();
+	for (let index = 0; index < path.length - 1; index += 1) {
+		const edgeIndex = findEdgeIndex(path[index], path[index + 1]);
+		if (edgeIndex !== -1) {
+			pathEdges.add(String(edgeIndex));
+		}
+	}
+
+	document.querySelectorAll(".edge").forEach((edge) => {
+		if (pathEdges.has(edge.dataset.index)) {
+			edge.classList.add("path-edge");
+		}
+	});
+
+	document.querySelectorAll(".node-circle").forEach((circle) => {
+		const nodeId = circle.parentElement.dataset.id;
+		if (path.includes(nodeId)) {
+			circle.classList.add("on-path");
+		}
+	});
+
+	const startNode = path[0];
+	const endNode = path[path.length - 1];
+	document.querySelectorAll(".pulse-ring").forEach((ring) => {
+		const nodeId = ring.parentElement.dataset.id;
+		ring.classList.toggle("active", nodeId === startNode || nodeId === endNode);
+	});
+}
+
+function formatPath(path) {
+	return path.length ? path.join(" → ") : "No path found";
+}
+
+function formatDistance(distance) {
+	return distance >= 0 ? `${distance.toFixed(2)} km` : "—";
+}
+
+function updateResults(dResult, bResult) {
+	document.getElementById("d-path").textContent = formatPath(dResult.path);
+	document.getElementById("d-dist").textContent = formatDistance(dResult.distance);
+	document.getElementById("d-steps").textContent = dResult.steps;
+	document.getElementById("d-time").textContent = "O((V+E) log V)";
+
+	document.getElementById("b-path").textContent = formatPath(bResult.path);
+	document.getElementById("b-dist").textContent = formatDistance(bResult.distance);
+	document.getElementById("b-steps").textContent = bResult.steps;
+	document.getElementById("b-time").textContent = "O(VE)";
+
+	document.getElementById("ct-d-path").textContent = dResult.path.length ? `${dResult.path.length} nodes` : "—";
+	document.getElementById("ct-b-path").textContent = bResult.path.length ? `${bResult.path.length} nodes` : "—";
+	document.getElementById("ct-d-dist").textContent = formatDistance(dResult.distance);
+	document.getElementById("ct-b-dist").textContent = formatDistance(bResult.distance);
+	document.getElementById("ct-d-iter").textContent = dResult.steps;
+	document.getElementById("ct-b-iter").textContent = bResult.steps;
+}
+
+async function loadGraph() {
+	const response = await fetch(`${API_BASE}/graph`);
+	if (!response.ok) {
+		throw new Error("Failed to load graph data");
+	}
+
+	graphData = await response.json();
+	populateSelects();
+	buildGraph();
+}
+
+async function findPath() {
+	const src = srcSelect.value;
+	const dst = dstSelect.value;
+	setError("");
+
+	if (!graphData) {
+		setError("Graph data is still loading.");
+		return;
+	}
+
+	if (!src || !dst) {
+		setError("Select both source and destination nodes.");
+		return;
+	}
+
+	if (src === dst) {
+		setError("Source and destination must be different.");
+		return;
+	}
+
+	const runButton = document.querySelector(".btn-find");
+	runButton.disabled = true;
+	runButton.textContent = "Finding...";
+
+	try {
+		const response = await fetch(
+			`${API_BASE}/shortest-path?src=${encodeURIComponent(src)}&dst=${encodeURIComponent(dst)}`
+		);
+		const data = await response.json();
+
+		if (!response.ok) {
+			throw new Error(data.error || "Failed to fetch shortest path");
+		}
+
+		updateResults(data.dijkstra, data.bellman_ford);
+		highlightPath(data.dijkstra.path.length ? data.dijkstra.path : data.bellman_ford.path);
+		updateNodeVisuals();
+		document.querySelector("footer").scrollIntoView({ behavior: "smooth" });
+	} catch (error) {
+		setError(error.message || "Failed to compute shortest path");
+	} finally {
+		runButton.disabled = false;
+		runButton.textContent = "▶ Find Path";
+	}
 }
 
 function resetGraph() {
-	document.getElementById('src-select').value = '';
-	document.getElementById('dst-select').value = '';
-	document.querySelectorAll('.node-circle').forEach(c =>
-		c.classList.remove('source-node','dest-node','on-path'));
-	document.querySelectorAll('.edge').forEach(e => e.classList.remove('path-edge'));
-	document.querySelectorAll('.pulse-ring').forEach(r => r.classList.remove('active'));
-	['d-path','d-dist','d-steps','d-time','b-path','b-dist','b-steps','b-time',
-	 'ct-d-path','ct-b-path','ct-d-dist','ct-b-dist','ct-d-iter','ct-b-iter']
-		.forEach(id => document.getElementById(id).textContent = '—');
+	srcSelect.value = "";
+	dstSelect.value = "";
+	setError("");
+	document.querySelectorAll(".node-circle").forEach((circle) => {
+		circle.classList.remove("source-node", "dest-node", "on-path");
+	});
+	document.querySelectorAll(".edge").forEach((edge) => edge.classList.remove("path-edge"));
+	document.querySelectorAll(".pulse-ring").forEach((ring) => ring.classList.remove("active"));
+
+	["d-path", "d-dist", "d-steps", "d-time", "b-path", "b-dist", "b-steps", "b-time", "ct-d-path", "ct-b-path", "ct-d-dist", "ct-b-dist", "ct-d-iter", "ct-b-iter"].forEach((id) => {
+		document.getElementById(id).textContent = "—";
+	});
+
 	clickState = 0;
-	window.scrollTo({ top: 0, behavior: 'smooth' });
+	window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-populateSelects();
-buildGraph();
+document.addEventListener("DOMContentLoaded", async () => {
+	try {
+		await loadGraph();
+	} catch (error) {
+		setError(error.message || "Failed to initialize graph");
+	}
 
-let resizeTimer;
-window.addEventListener('resize', () => {
-	clearTimeout(resizeTimer);
-	resizeTimer = setTimeout(buildGraph, 120);
-});
+	["src-select", "dst-select"].forEach((elementId) => {
+		document.getElementById(elementId).addEventListener("change", () => {
+			clickState = 0;
+			updateNodeVisuals();
+		});
+	});
 
-['src-select','dst-select'].forEach(id => {
-	document.getElementById(id).addEventListener('change', () => {
-		updateNodeVisuals();
-		clickState = 0;
+	window.addEventListener("resize", () => {
+		if (!graphData) {
+			return;
+		}
+
+		clearTimeout(resizeTimer);
+		resizeTimer = setTimeout(() => buildGraph(), 120);
 	});
 });
 </script>

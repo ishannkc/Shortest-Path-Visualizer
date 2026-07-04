@@ -1,33 +1,473 @@
 {
-	"nodes": [
-		{ "id": "Main Gate" },
-		{ "id": "Admin Block" },
-		{ "id": "Library" },
-		{ "id": "Canteen" },
-		{ "id": "CS Department" },
-		{ "id": "Hostel" },
-		{ "id": "Sports Ground" },
-		{ "id": "Medical Center" },
-		{ "id": "Central Lab" },
-		{ "id": "Engineering Block" },
-		{ "id": "Parking" },
-		{ "id": "Girls Hostel" }
-	],
-	"edges": [
-		{ "from": "Main Gate",      "to": "Admin Block",       "weight": 0.3 },
-		{ "from": "Main Gate",      "to": "Parking",           "weight": 0.2 },
-		{ "from": "Admin Block",    "to": "Library",           "weight": 0.4 },
-		{ "from": "Admin Block",    "to": "Canteen",           "weight": 0.5 },
-		{ "from": "Admin Block",    "to": "Medical Center",    "weight": 0.6 },
-		{ "from": "Library",        "to": "CS Department",     "weight": 0.3 },
-		{ "from": "Library",        "to": "Central Lab",       "weight": 0.6 },
-		{ "from": "Canteen",        "to": "Hostel",            "weight": 0.4 },
-		{ "from": "Canteen",        "to": "Sports Ground",     "weight": 0.7 },
-		{ "from": "CS Department",  "to": "Engineering Block", "weight": 0.2 },
-		{ "from": "CS Department",  "to": "Central Lab",       "weight": 0.4 },
-		{ "from": "Hostel",         "to": "Girls Hostel",      "weight": 0.3 },
-		{ "from": "Hostel",         "to": "Sports Ground",     "weight": 0.5 },
-		{ "from": "Medical Center", "to": "Girls Hostel",      "weight": 0.4 },
-		{ "from": "Parking",        "to": "Engineering Block", "weight": 0.8 }
-	]
+  "nodes": [
+    {
+      "id": "VC Office"
+    },
+    {
+      "id": "Library Park"
+    },
+    {
+      "id": "Library"
+    },
+    {
+      "id": "Fountain"
+    },
+    {
+      "id": "CV Raman Hall"
+    },
+    {
+      "id": "Canteen"
+    },
+    {
+      "id": "Pond"
+    },
+    {
+      "id": "Parking 1"
+    },
+    {
+      "id": "Parking 2"
+    },
+    {
+      "id": "Parking 3"
+    },
+    {
+      "id": "ATM"
+    },
+    {
+      "id": "Technical Training Center"
+    },
+    {
+      "id": "Green Hydrogen Lab"
+    },
+    {
+      "id": "Hydrogen Refueling Station"
+    },
+    {
+      "id": "APHRL"
+    },
+    {
+      "id": "Multipurpose Hall"
+    },
+    {
+      "id": "Swimming Pool"
+    },
+    {
+      "id": "Volleyball Court"
+    },
+    {
+      "id": "Football Ground"
+    },
+    {
+      "id": "Basketball Court"
+    },
+    {
+      "id": "Boys Hostel"
+    },
+    {
+      "id": "Social Hall"
+    },
+    {
+      "id": "Gym"
+    },
+    {
+      "id": "NTIC Research Center"
+    },
+    {
+      "id": "Mechanical Workshop"
+    },
+    {
+      "id": "TTC Boys Hostel"
+    },
+    {
+      "id": "Block 31 C"
+    },
+    {
+      "id": "Mesh Canteen"
+    },
+    {
+      "id": "Bank"
+    },
+    {
+      "id": "Exam Controller Office"
+    },
+    {
+      "id": "Staff Quarter"
+    },
+    {
+      "id": "School of Law"
+    },
+    {
+      "id": "Semi-circle Park"
+    },
+    {
+      "id": "Cafeteria"
+    },
+    {
+      "id": "Pharmacy Block"
+    },
+    {
+      "id": "Civil Engineering Block"
+    },
+    {
+      "id": "Block 11"
+    },
+    {
+      "id": "Girls Hostel"
+    },
+    {
+      "id": "Shed"
+    },
+    {
+      "id": "Aquatic Ecology Center"
+    },
+    {
+      "id": "WEIR Lab"
+    },
+    {
+      "id": "Environment Block"
+    },
+    {
+      "id": "Fluid Lab"
+    },
+    {
+      "id": "Block 6"
+    },
+    {
+      "id": "Block 7"
+    },
+    {
+      "id": "Block 8"
+    },
+    {
+      "id": "Block 9"
+    },
+    {
+      "id": "High Voltage Lab"
+    },
+    {
+      "id": "Turbine Testing Lab"
+    }
+  ],
+  "edges": [
+    {
+      "from": "ATM",
+      "to": "Parking 1",
+      "weight": 0.03
+    },
+    {
+      "from": "ATM",
+      "to": "Pond",
+      "weight": 0.06
+    },
+    {
+      "from": "Parking 1",
+      "to": "Technical Training Center",
+      "weight": 0.04
+    },
+    {
+      "from": "Pond",
+      "to": "Block 9",
+      "weight": 0.04
+    },
+    {
+      "from": "Pond",
+      "to": "Block 11",
+      "weight": 0.05
+    },
+    {
+      "from": "Technical Training Center",
+      "to": "Green Hydrogen Lab",
+      "weight": 0.05
+    },
+    {
+      "from": "Green Hydrogen Lab",
+      "to": "Hydrogen Refueling Station",
+      "weight": 0.04
+    },
+    {
+      "from": "Hydrogen Refueling Station",
+      "to": "APHRL",
+      "weight": 0.02
+    },
+    {
+      "from": "APHRL",
+      "to": "Multipurpose Hall",
+      "weight": 0.04
+    },
+    {
+      "from": "Multipurpose Hall",
+      "to": "Swimming Pool",
+      "weight": 0.04
+    },
+    {
+      "from": "Swimming Pool",
+      "to": "Volleyball Court",
+      "weight": 0.06
+    },
+    {
+      "from": "Volleyball Court",
+      "to": "Football Ground",
+      "weight": 0.06
+    },
+    {
+      "from": "Football Ground",
+      "to": "Basketball Court",
+      "weight": 0.06
+    },
+    {
+      "from": "Basketball Court",
+      "to": "Social Hall",
+      "weight": 0.05
+    },
+    {
+      "from": "Basketball Court",
+      "to": "Boys Hostel",
+      "weight": 0.05
+    },
+    {
+      "from": "Boys Hostel",
+      "to": "Social Hall",
+      "weight": 0.02
+    },
+    {
+      "from": "Social Hall",
+      "to": "Gym",
+      "weight": 0.08
+    },
+    {
+      "from": "Gym",
+      "to": "NTIC Research Center",
+      "weight": 0.04
+    },
+    {
+      "from": "NTIC Research Center",
+      "to": "Mechanical Workshop",
+      "weight": 0.05
+    },
+    {
+      "from": "Boys Hostel",
+      "to": "TTC Boys Hostel",
+      "weight": 0.08
+    },
+    {
+      "from": "TTC Boys Hostel",
+      "to": "Block 31 C",
+      "weight": 0.04
+    },
+    {
+      "from": "TTC Boys Hostel",
+      "to": "School of Law",
+      "weight": 0.13
+    },
+    {
+      "from": "Block 31 C",
+      "to": "Mesh Canteen",
+      "weight": 0.05
+    },
+    {
+      "from": "Block 31 C",
+      "to": "School of Law",
+      "weight": 0.14
+    },
+    {
+      "from": "Mesh Canteen",
+      "to": "Cafeteria",
+      "weight": 0.07
+    },
+    {
+      "from": "Mesh Canteen",
+      "to": "Bank",
+      "weight": 0.11
+    },
+    {
+      "from": "Cafeteria",
+      "to": "Semi-circle Park",
+      "weight": 0.05
+    },
+    {
+      "from": "Cafeteria",
+      "to": "Fountain",
+      "weight": 0.04
+    },
+    {
+      "from": "Semi-circle Park",
+      "to": "Girls Hostel",
+      "weight": 0.06
+    },
+    {
+      "from": "Girls Hostel",
+      "to": "Shed",
+      "weight": 0.03
+    },
+    {
+      "from": "Girls Hostel",
+      "to": "Staff Quarter",
+      "weight": 0.04
+    },
+    {
+      "from": "Girls Hostel",
+      "to": "Parking 2",
+      "weight": 0.08
+    },
+    {
+      "from": "Staff Quarter",
+      "to": "Bank",
+      "weight": 0.02
+    },
+    {
+      "from": "Staff Quarter",
+      "to": "Parking 3",
+      "weight": 0.08
+    },
+    {
+      "from": "Bank",
+      "to": "Parking 2",
+      "weight": 0.02
+    },
+    {
+      "from": "Bank",
+      "to": "Exam Controller Office",
+      "weight": 0.05
+    },
+    {
+      "from": "Exam Controller Office",
+      "to": "Parking 3",
+      "weight": 0.06
+    },
+    {
+      "from": "Shed",
+      "to": "Aquatic Ecology Center",
+      "weight": 0.05
+    },
+    {
+      "from": "Shed",
+      "to": "Environment Block",
+      "weight": 0.05
+    },
+    {
+      "from": "Aquatic Ecology Center",
+      "to": "WEIR Lab",
+      "weight": 0.03
+    },
+    {
+      "from": "Aquatic Ecology Center",
+      "to": "Block 6",
+      "weight": 0.05
+    },
+    {
+      "from": "WEIR Lab",
+      "to": "Fluid Lab",
+      "weight": 0.02
+    },
+    {
+      "from": "Fluid Lab",
+      "to": "Environment Block",
+      "weight": 0.06
+    },
+    {
+      "from": "Fluid Lab",
+      "to": "Block 6",
+      "weight": 0.08
+    },
+    {
+      "from": "Block 9",
+      "to": "Block 8",
+      "weight": 0.05
+    },
+    {
+      "from": "Block 8",
+      "to": "High Voltage Lab",
+      "weight": 0.03
+    },
+    {
+      "from": "Block 8",
+      "to": "Block 7",
+      "weight": 0.04
+    },
+    {
+      "from": "High Voltage Lab",
+      "to": "Turbine Testing Lab",
+      "weight": 0.02
+    },
+    {
+      "from": "Turbine Testing Lab",
+      "to": "Block 7",
+      "weight": 0.05
+    },
+    {
+      "from": "Block 7",
+      "to": "Block 6",
+      "weight": 0.06
+    },
+    {
+      "from": "Block 11",
+      "to": "VC Office",
+      "weight": 0.05
+    },
+    {
+      "from": "Block 9",
+      "to": "VC Office",
+      "weight": 0.05
+    },
+    {
+      "from": "VC Office",
+      "to": "Canteen",
+      "weight": 0.05
+    },
+    {
+      "from": "VC Office",
+      "to": "Library Park",
+      "weight": 0.03
+    },
+    {
+      "from": "Library Park",
+      "to": "CV Raman Hall",
+      "weight": 0.03
+    },
+    {
+      "from": "CV Raman Hall",
+      "to": "Canteen",
+      "weight": 0.03
+    },
+    {
+      "from": "Canteen",
+      "to": "Block 7",
+      "weight": 0.04
+    },
+    {
+      "from": "Library Park",
+      "to": "Library",
+      "weight": 0.03
+    },
+    {
+      "from": "Library Park",
+      "to": "Civil Engineering Block",
+      "weight": 0.06
+    },
+    {
+      "from": "Civil Engineering Block",
+      "to": "Pharmacy Block",
+      "weight": 0.04
+    },
+    {
+      "from": "Civil Engineering Block",
+      "to": "Block 11",
+      "weight": 0.06
+    },
+    {
+      "from": "Pharmacy Block",
+      "to": "Library",
+      "weight": 0.06
+    },
+    {
+      "from": "Library",
+      "to": "Fountain",
+      "weight": 0.05
+    },
+    {
+      "from": "Fountain",
+      "to": "Block 6",
+      "weight": 0.07
+    }
+  ]
 }
