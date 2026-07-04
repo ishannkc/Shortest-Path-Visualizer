@@ -63,7 +63,7 @@ Or use the convenience script in the repo root:
 
 ```powershell
 .
-run_app.ps1
+.\run.ps1
 ```
 
 The app runs at:
