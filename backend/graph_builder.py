@@ -1,6 +1,5 @@
 import json
 import os
-from math import cos, pi, sin
 
 import networkx as nx
 
@@ -17,60 +16,33 @@ def _read_graph_data():
 		return json.load(file)
 
 
-def _normalize_positions(nx_graph):
-	if nx_graph.number_of_nodes() == 0:
+def _normalize_positions(node_data):
+	if not node_data:
 		return {}
 
-	preferred_roots = ["VC Office", "Library Park", "ATM"]
-	root = None
-	for candidate in preferred_roots:
-		if candidate in nx_graph:
-			root = candidate
-			break
+	x_values = [node["x"] for node in node_data if "x" in node and "y" in node]
+	y_values = [node["y"] for node in node_data if "x" in node and "y" in node]
+	if not x_values or not y_values:
+		return {}
 
-	if root is None:
-		root = max(nx_graph.degree, key=lambda item: (item[1], item[0]))[0]
+	min_x = min(x_values)
+	max_x = max(x_values)
+	min_y = min(y_values)
+	max_y = max(y_values)
 
-	level_map = nx.single_source_shortest_path_length(nx_graph, root)
-	levels = {}
-	for node_id, level in level_map.items():
-		levels.setdefault(level, []).append(node_id)
+	x_span = max(max_x - min_x, 1)
+	y_span = max(max_y - min_y, 1)
+	padding = 0.03
+	usable_space = 1 - (padding * 2)
 
-	for node_ids in levels.values():
-		node_ids.sort()
-
-	orphan_nodes = sorted(set(nx_graph.nodes()) - set(level_map))
-	if orphan_nodes:
-		levels.setdefault(max(levels.keys(), default=0) + 1, []).extend(orphan_nodes)
-		levels[max(levels.keys())].sort()
-
-	max_level = max(levels.keys(), default=0)
-	positions = {root: {"x": 0.5, "y": 0.5}}
-
-	if max_level == 0:
-		return positions
-
-	max_radius = 0.4
-	for level in range(1, max_level + 1):
-		nodes_at_level = levels.get(level, [])
-		if not nodes_at_level:
-			continue
-
-		radius = max_radius * (level / max_level)
-		angle_offset = -pi / 2
-		angle_step = (2 * pi) / len(nodes_at_level)
-		if len(nodes_at_level) == 1:
-			positions[nodes_at_level[0]] = {"x": 0.5, "y": 0.5 - radius}
-			continue
-
-		for index, node_id in enumerate(nodes_at_level):
-			angle = angle_offset + (angle_step * index)
-			positions[node_id] = {
-				"x": 0.5 + (radius * cos(angle)),
-				"y": 0.5 + (radius * sin(angle)),
-			}
-
-	return positions
+	return {
+		node["id"]: {
+			"x": padding + (((node["x"] - min_x) / x_span) * usable_space),
+			"y": padding + (((node["y"] - min_y) / y_span) * usable_space),
+		}
+		for node in node_data
+		if "id" in node and "x" in node and "y" in node
+	}
 
 
 def load_graph():
@@ -99,14 +71,9 @@ def load_graph():
 
 def load_graph_data():
 	data = _read_graph_data()
-	nodes = [node["id"] for node in data.get("nodes", [])]
-	nx_graph = nx.Graph()
-	nx_graph.add_nodes_from(nodes)
-
-	for edge in data.get("edges", []):
-		nx_graph.add_edge(edge["from"], edge["to"], weight=edge["weight"])
-
-	positions = _normalize_positions(nx_graph)
+	node_data = data.get("nodes", [])
+	nodes = [node["id"] for node in node_data]
+	positions = _normalize_positions(node_data)
 	return {
 		"nodes": [
 			{

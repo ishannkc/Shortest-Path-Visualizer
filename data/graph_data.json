@@ -1,151 +1,249 @@
 {
   "nodes": [
     {
-      "id": "VC Office"
+      "id": "VC Office",
+      "x": 968,
+      "y": 197
     },
     {
-      "id": "Library Park"
+      "id": "Library Park",
+      "x": 960,
+      "y": 243
     },
     {
-      "id": "Library"
+      "id": "Library",
+      "x": 963,
+      "y": 291
     },
     {
-      "id": "Fountain"
+      "id": "Fountain",
+      "x": 968,
+      "y": 365
     },
     {
-      "id": "CV Raman Hall"
+      "id": "CV Raman Hall",
+      "x": 1020,
+      "y": 243
     },
     {
-      "id": "Canteen"
+      "id": "Canteen",
+      "x": 1079,
+      "y": 230
     },
     {
-      "id": "Pond"
+      "id": "Pond",
+      "x": 940,
+      "y": 111
     },
     {
-      "id": "Parking 1"
+      "id": "Parking 1",
+      "x": 825,
+      "y": 35
     },
     {
-      "id": "Parking 2"
+      "id": "Parking 2",
+      "x": 1019,
+      "y": 580
     },
     {
-      "id": "Parking 3"
+      "id": "Parking 3",
+      "x": 1239,
+      "y": 588
     },
     {
-      "id": "ATM"
+      "id": "ATM",
+      "x": 884,
+      "y": 18
     },
     {
-      "id": "Technical Training Center"
+      "id": "Technical Training Center",
+      "x": 771,
+      "y": 94
     },
     {
-      "id": "Green Hydrogen Lab"
+      "id": "Green Hydrogen Lab",
+      "x": 682,
+      "y": 142
     },
     {
-      "id": "Hydrogen Refueling Station"
+      "id": "Hydrogen Refueling Station",
+      "x": 608,
+      "y": 168
     },
     {
-      "id": "APHRL"
+      "id": "APHRL",
+      "x": 555,
+      "y": 176
     },
     {
-      "id": "Multipurpose Hall"
+      "id": "Multipurpose Hall",
+      "x": 615,
+      "y": 230
     },
     {
-      "id": "Swimming Pool"
+      "id": "Swimming Pool",
+      "x": 523,
+      "y": 230
     },
     {
-      "id": "Volleyball Court"
+      "id": "Volleyball Court",
+      "x": 611,
+      "y": 299
     },
     {
-      "id": "Football Ground"
+      "id": "Football Ground",
+      "x": 568,
+      "y": 386
     },
     {
-      "id": "Basketball Court"
+      "id": "Basketball Court",
+      "x": 451,
+      "y": 450
     },
     {
-      "id": "Boys Hostel"
+      "id": "Boys Hostel",
+      "x": 499,
+      "y": 527
     },
     {
-      "id": "Social Hall"
+      "id": "Social Hall",
+      "x": 449,
+      "y": 533
     },
     {
-      "id": "Gym"
+      "id": "Gym",
+      "x": 298,
+      "y": 608
     },
     {
-      "id": "NTIC Research Center"
+      "id": "NTIC Research Center",
+      "x": 214,
+      "y": 603
     },
     {
-      "id": "Mechanical Workshop"
+      "id": "Mechanical Workshop",
+      "x": 104,
+      "y": 567
     },
     {
-      "id": "TTC Boys Hostel"
+      "id": "TTC Boys Hostel",
+      "x": 654,
+      "y": 604
     },
     {
-      "id": "Block 31 C"
+      "id": "Block 31 C",
+      "x": 746,
+      "y": 572
     },
     {
-      "id": "Mesh Canteen"
+      "id": "Mesh Canteen",
+      "x": 782,
+      "y": 491
     },
     {
-      "id": "Bank"
+      "id": "Bank",
+      "x": 1027,
+      "y": 546
     },
     {
-      "id": "Exam Controller Office"
+      "id": "Exam Controller Office",
+      "x": 1102,
+      "y": 602
     },
     {
-      "id": "Staff Quarter"
+      "id": "Staff Quarter",
+      "x": 1063,
+      "y": 533
     },
     {
-      "id": "School of Law"
+      "id": "School of Law",
+      "x": 763,
+      "y": 808
     },
     {
-      "id": "Semi-circle Park"
+      "id": "Semi-circle Park",
+      "x": 963,
+      "y": 457
     },
     {
-      "id": "Cafeteria"
+      "id": "Cafeteria",
+      "x": 881,
+      "y": 401
     },
     {
-      "id": "Pharmacy Block"
+      "id": "Pharmacy Block",
+      "x": 830,
+      "y": 319
     },
     {
-      "id": "Civil Engineering Block"
+      "id": "Civil Engineering Block",
+      "x": 817,
+      "y": 256
     },
     {
-      "id": "Block 11"
+      "id": "Block 11",
+      "x": 849,
+      "y": 167
     },
     {
-      "id": "Girls Hostel"
+      "id": "Girls Hostel",
+      "x": 1111,
+      "y": 473
     },
     {
-      "id": "Shed"
+      "id": "Shed",
+      "x": 1180,
+      "y": 467
     },
     {
-      "id": "Aquatic Ecology Center"
+      "id": "Aquatic Ecology Center",
+      "x": 1197,
+      "y": 388
     },
     {
-      "id": "WEIR Lab"
+      "id": "WEIR Lab",
+      "x": 1239,
+      "y": 355
     },
     {
-      "id": "Environment Block"
+      "id": "Environment Block",
+      "x": 1294,
+      "y": 448
     },
     {
-      "id": "Fluid Lab"
+      "id": "Fluid Lab",
+      "x": 1287,
+      "y": 353
     },
     {
-      "id": "Block 6"
+      "id": "Block 6",
+      "x": 1114,
+      "y": 333
     },
     {
-      "id": "Block 7"
+      "id": "Block 7",
+      "x": 1159,
+      "y": 247
     },
     {
-      "id": "Block 8"
+      "id": "Block 8",
+      "x": 1131,
+      "y": 190
     },
     {
-      "id": "Block 9"
+      "id": "Block 9",
+      "x": 1037,
+      "y": 135
     },
     {
-      "id": "High Voltage Lab"
+      "id": "High Voltage Lab",
+      "x": 1171,
+      "y": 145
     },
     {
-      "id": "Turbine Testing Lab"
+      "id": "Turbine Testing Lab",
+      "x": 1198,
+      "y": 165
     }
   ],
   "edges": [
@@ -468,6 +566,76 @@
       "from": "Fountain",
       "to": "Block 6",
       "weight": 0.07
+    },
+    {
+      "from": "Hydrogen Refueling Station",
+      "to": "Multipurpose Hall",
+      "weight": 0.02
+    },
+    {
+      "from": "APHRL",
+      "to": "Swimming Pool",
+      "weight": 0.03
+    },
+    {
+      "from": "Multipurpose Hall",
+      "to": "Volleyball Court",
+      "weight": 0.03
+    },
+    {
+      "from": "VC Office",
+      "to": "CV Raman Hall",
+      "weight": 0.03
+    },
+    {
+      "from": "Library",
+      "to": "CV Raman Hall",
+      "weight": 0.03
+    },
+    {
+      "from": "Block 8",
+      "to": "Turbine Testing Lab",
+      "weight": 0.03
+    },
+    {
+      "from": "Block 7",
+      "to": "High Voltage Lab",
+      "weight": 0.04
+    },
+    {
+      "from": "Aquatic Ecology Center",
+      "to": "Environment Block",
+      "weight": 0.05
+    },
+    {
+      "from": "Cafeteria",
+      "to": "Pharmacy Block",
+      "weight": 0.04
+    },
+    {
+      "from": "Shed",
+      "to": "Block 6",
+      "weight": 0.06
+    },
+    {
+      "from": "Parking 2",
+      "to": "Staff Quarter",
+      "weight": 0.03
+    },
+    {
+      "from": "Exam Controller Office",
+      "to": "Staff Quarter",
+      "weight": 0.03
+    },
+    {
+      "from": "Parking 2",
+      "to": "Exam Controller Office",
+      "weight": 0.03
+    },
+    {
+      "from": "Fountain",
+      "to": "Semi-circle Park",
+      "weight": 0.04
     }
   ]
 }
