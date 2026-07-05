@@ -148,12 +148,22 @@
 		bottom: 0;
 		overflow: hidden;
 		background: var(--bg);
+		isolation: isolate;
+		cursor: grab;
+		user-select: none;
 	}
+	#graph-wrap.panning { cursor: grabbing; }
 
 	#graph-svg {
+		position: relative;
+		z-index: 1;
 		width: 100%;
 		height: 100%;
 		display: block;
+		touch-action: none;
+	}
+	#graph-svg text {
+		user-select: none;
 	}
 
 	#graph-wrap::after {
@@ -165,12 +175,13 @@
 			linear-gradient(to bottom, rgba(180,180,174,0.45) 1px, transparent 1px);
 		background-size: 40px 40px;
 		pointer-events: none;
-		z-index: 2;
+		z-index: 0;
 	}
 
 	.edge {
 		stroke: var(--edge-idle);
 		stroke-width: 1.5;
+		vector-effect: non-scaling-stroke;
 		transition: stroke .4s, stroke-width .3s;
 	}
 	.edge.path-edge {
@@ -179,11 +190,15 @@
 	}
 	.edge-label {
 		fill: #b0b0a8;
-		font-size: 10px;
+		font-size: 11px;
+		font-weight: 600;
 		font-family: 'JetBrains Mono', monospace;
 		text-anchor: middle;
 		dominant-baseline: middle;
 		pointer-events: none;
+		paint-order: stroke fill;
+		stroke: rgba(247,247,245,0.98);
+		stroke-width: 3px;
 		transition: fill .3s;
 	}
 
@@ -191,6 +206,7 @@
 		fill: var(--node-fill);
 		stroke: var(--node-stroke);
 		stroke-width: 1.5;
+		vector-effect: non-scaling-stroke;
 		transition: fill .3s, stroke .3s, stroke-width .2s;
 		cursor: pointer;
 		filter: drop-shadow(0 1px 3px rgba(0,0,0,0.08));
@@ -219,12 +235,26 @@
 
 	.node-label {
 		fill: var(--text-sub);
-		font-size: 10px;
+		font-size: 11px;
+		font-weight: 600;
 		font-family: 'Inter', sans-serif;
-		font-weight: 500;
 		text-anchor: middle;
 		dominant-baseline: middle;
 		pointer-events: none;
+		paint-order: stroke fill;
+		stroke: rgba(247,247,245,0.98);
+		stroke-width: 3px;
+	}
+
+	#graph-wrap.zoomed-in .edge-label,
+	#graph-wrap.zoomed-in .node-label {
+		font-size: 12px;
+		stroke-width: 3.5px;
+	}
+
+	#graph-wrap.zoomed-out .edge-label,
+	#graph-wrap.zoomed-out .node-label {
+		opacity: 0.9;
 	}
 
 	.pulse-ring {
@@ -456,8 +486,10 @@
 				<polygon points="0 0, 8 3, 0 6" fill="#ff6b35" />
 			</marker>
 		</defs>
-		<g id="edges-layer"></g>
-		<g id="nodes-layer"></g>
+		<g id="zoom-layer">
+			<g id="edges-layer"></g>
+			<g id="nodes-layer"></g>
+		</g>
 	</svg>
 </div>
 
@@ -574,6 +606,8 @@
 const API_BASE = "";
 
 const svg = document.getElementById("graph-svg");
+const graphWrap = document.getElementById("graph-wrap");
+const zoomLayer = document.getElementById("zoom-layer");
 const edgeLayer = document.getElementById("edges-layer");
 const nodeLayer = document.getElementById("nodes-layer");
 const srcSelect = document.getElementById("src-select");
@@ -585,6 +619,162 @@ let clickState = 0;
 let resizeTimer = null;
 let W = 1;
 let H = 1;
+const MIN_ZOOM = 0.65;
+const MAX_ZOOM = 8.0;
+const ZOOM_STEP = 1.12;
+let zoomState = {
+	scale: 1,
+	translateX: 0,
+	translateY: 0,
+};
+let panState = {
+	active: false,
+	startX: null,
+	startY: null,
+	originX: 0,
+	originY: 0,
+	pointerId: null,
+	moved: false,
+};
+
+function syncOverlayTransforms() {
+	const inverseScale = 1 / zoomState.scale;
+
+	document.querySelectorAll(".node-viewport").forEach((group) => {
+		group.setAttribute(
+			"transform",
+			`translate(${group.dataset.worldX} ${group.dataset.worldY})`
+		);
+		const inner = group.querySelector(".node-scale");
+		if (inner) {
+			inner.setAttribute("transform", `scale(${inverseScale})`);
+		}
+	});
+
+	document.querySelectorAll(".edge-label-viewport").forEach((group) => {
+		group.setAttribute(
+			"transform",
+			`translate(${group.dataset.worldX} ${group.dataset.worldY})`
+		);
+		const inner = group.querySelector(".edge-label-scale");
+		if (inner) {
+			inner.setAttribute("transform", `scale(${inverseScale})`);
+		}
+	});
+}
+
+function applyCameraTransform() {
+	zoomLayer.setAttribute(
+		"transform",
+		`translate(${zoomState.translateX} ${zoomState.translateY}) scale(${zoomState.scale})`
+	);
+	graphWrap.classList.toggle("zoomed-in", zoomState.scale >= 1.15);
+	graphWrap.classList.toggle("zoomed-out", zoomState.scale < 1);
+	syncOverlayTransforms();
+}
+
+function resetZoom() {
+	zoomState = {
+		scale: 1,
+		translateX: 0,
+		translateY: 0,
+	};
+	applyCameraTransform();
+}
+
+function getSvgPoint(event) {
+	const rect = svg.getBoundingClientRect();
+	return {
+		x: ((event.clientX - rect.left) / rect.width) * W,
+		y: ((event.clientY - rect.top) / rect.height) * H,
+	};
+}
+
+function handleWheelZoom(event) {
+	if (!graphData) {
+		return;
+	}
+
+	event.preventDefault();
+
+	const { x: svgX, y: svgY } = getSvgPoint(event);
+	const zoomFactor = Math.exp(-event.deltaY * 0.0015);
+	const nextScale = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomState.scale * zoomFactor));
+
+	if (nextScale === zoomState.scale) {
+		return;
+	}
+
+	const scaleRatio = nextScale / zoomState.scale;
+	zoomState = {
+		scale: nextScale,
+		translateX: svgX - ((svgX - zoomState.translateX) * scaleRatio),
+		translateY: svgY - ((svgY - zoomState.translateY) * scaleRatio),
+	};
+	applyCameraTransform();
+}
+
+function handlePointerDown(event) {
+	if (event.button !== 0 || !graphData) {
+		return;
+	}
+
+	panState = {
+		active: false,
+		startX: event.clientX,
+		startY: event.clientY,
+		originX: zoomState.translateX,
+		originY: zoomState.translateY,
+		pointerId: event.pointerId,
+		moved: false,
+	};
+}
+
+function handlePointerMove(event) {
+	if (!graphData || panState.startX === null || panState.startY === null) {
+		return;
+	}
+
+	const deltaX = event.clientX - panState.startX;
+	const deltaY = event.clientY - panState.startY;
+
+	if (!panState.active) {
+		if (Math.hypot(deltaX, deltaY) < 5) {
+			return;
+		}
+
+		panState.active = true;
+		graphWrap.setPointerCapture(event.pointerId);
+		graphWrap.classList.add("panning");
+	}
+
+	panState.moved = true;
+	zoomState.translateX = panState.originX + deltaX;
+	zoomState.translateY = panState.originY + deltaY;
+	applyCameraTransform();
+}
+
+function endPointerPan() {
+	if (panState.startX === null || panState.startY === null) {
+		return;
+	}
+
+	const wasPanning = panState.active;
+	if (panState.pointerId !== null && graphWrap.hasPointerCapture(panState.pointerId)) {
+		graphWrap.releasePointerCapture(panState.pointerId);
+	}
+	panState = {
+		active: false,
+		startX: null,
+		startY: null,
+		originX: 0,
+		originY: 0,
+		pointerId: null,
+		moved: false,
+	};
+	graphWrap.classList.remove("panning");
+	return wasPanning;
+}
 
 function setError(message) {
 	if (message) {
@@ -653,6 +843,7 @@ function buildGraph() {
 
 	W = svg.clientWidth;
 	H = svg.clientHeight;
+	svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
 	edgeLayer.innerHTML = "";
 	nodeLayer.innerHTML = "";
 
@@ -674,44 +865,60 @@ function buildGraph() {
 		edgeLayer.appendChild(line);
 
 		const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-		label.setAttribute("x", midX);
-		label.setAttribute("y", midY - 7);
+		label.setAttribute("x", 0);
+		label.setAttribute("y", 0);
 		label.classList.add("edge-label");
 		label.dataset.index = String(index);
 		label.textContent = edge.weight.toFixed(2);
-		edgeLayer.appendChild(label);
+		const labelViewport = document.createElementNS("http://www.w3.org/2000/svg", "g");
+		labelViewport.classList.add("edge-label-viewport");
+		labelViewport.dataset.worldX = String(midX);
+		labelViewport.dataset.worldY = String(midY - 7);
+		const labelScale = document.createElementNS("http://www.w3.org/2000/svg", "g");
+		labelScale.classList.add("edge-label-scale");
+		labelScale.appendChild(label);
+		labelViewport.appendChild(labelScale);
+		edgeLayer.appendChild(labelViewport);
 	});
 
 	graphData.nodes.forEach((node) => {
 		const { x, y } = getPos(node.id);
 		const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+		group.classList.add("node-viewport");
 		group.dataset.id = node.id;
+		group.dataset.worldX = String(x);
+		group.dataset.worldY = String(y);
 		group.style.cursor = "pointer";
 
+		const nodeScale = document.createElementNS("http://www.w3.org/2000/svg", "g");
+		nodeScale.classList.add("node-scale");
+
 		const pulse = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-		pulse.setAttribute("cx", x);
-		pulse.setAttribute("cy", y);
+		pulse.setAttribute("cx", 0);
+		pulse.setAttribute("cy", 0);
 		pulse.setAttribute("r", 20);
 		pulse.classList.add("pulse-ring");
-		group.appendChild(pulse);
+		nodeScale.appendChild(pulse);
 
 		const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-		circle.setAttribute("cx", x);
-		circle.setAttribute("cy", y);
+		circle.setAttribute("cx", 0);
+		circle.setAttribute("cy", 0);
 		circle.setAttribute("r", 20);
 		circle.classList.add("node-circle");
-		group.appendChild(circle);
+		nodeScale.appendChild(circle);
 
 		const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
 		label.classList.add("node-label");
-		appendWrappedLabel(label, node.id, x, y);
-		group.appendChild(label);
+		appendWrappedLabel(label, node.id, 0, 30);
+		nodeScale.appendChild(label);
+		group.appendChild(nodeScale);
 
 		group.addEventListener("click", () => nodeClick(node.id));
 		nodeLayer.appendChild(group);
 	});
 
 	updateNodeVisuals();
+	applyCameraTransform();
 }
 
 function populateSelects() {
@@ -740,7 +947,8 @@ function updateNodeVisuals() {
 	const src = srcSelect.value;
 	const dst = dstSelect.value;
 	document.querySelectorAll(".node-circle").forEach((circle) => {
-		const nodeId = circle.parentElement.dataset.id;
+		const nodeViewport = circle.closest(".node-viewport");
+		const nodeId = nodeViewport ? nodeViewport.dataset.id : null;
 		circle.classList.remove("source-node", "dest-node", "on-path");
 		if (nodeId === src) {
 			circle.classList.add("source-node");
@@ -795,7 +1003,8 @@ function highlightPath(path) {
 	});
 
 	document.querySelectorAll(".node-circle").forEach((circle) => {
-		const nodeId = circle.parentElement.dataset.id;
+		const nodeViewport = circle.closest(".node-viewport");
+		const nodeId = nodeViewport ? nodeViewport.dataset.id : null;
 		if (path.includes(nodeId)) {
 			circle.classList.add("on-path");
 		}
@@ -804,7 +1013,8 @@ function highlightPath(path) {
 	const startNode = path[0];
 	const endNode = path[path.length - 1];
 	document.querySelectorAll(".pulse-ring").forEach((ring) => {
-		const nodeId = ring.parentElement.dataset.id;
+		const nodeViewport = ring.closest(".node-viewport");
+		const nodeId = nodeViewport ? nodeViewport.dataset.id : null;
 		ring.classList.toggle("active", nodeId === startNode || nodeId === endNode);
 	});
 }
@@ -897,6 +1107,7 @@ function resetGraph() {
 	srcSelect.value = "";
 	dstSelect.value = "";
 	setError("");
+	resetZoom();
 	document.querySelectorAll(".node-circle").forEach((circle) => {
 		circle.classList.remove("source-node", "dest-node", "on-path");
 	});
@@ -933,6 +1144,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 		clearTimeout(resizeTimer);
 		resizeTimer = setTimeout(() => buildGraph(), 120);
 	});
+
+	graphWrap.addEventListener("wheel", handleWheelZoom, { passive: false });
+	graphWrap.addEventListener("pointerdown", handlePointerDown);
+	graphWrap.addEventListener("pointermove", handlePointerMove);
+	graphWrap.addEventListener("pointerup", endPointerPan);
+	graphWrap.addEventListener("pointerleave", endPointerPan);
+	graphWrap.addEventListener("pointercancel", endPointerPan);
 });
 </script>
 </body>

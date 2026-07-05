@@ -636,6 +636,106 @@
       "from": "Fountain",
       "to": "Semi-circle Park",
       "weight": 0.04
+    },
+    {
+      "from": "Technical Training Center",
+      "to": "Block 11",
+      "weight": 0.04
+    },
+    {
+      "from": "Library Park",
+      "to": "Canteen",
+      "weight": 0.05
+    },
+    {
+      "from": "Library Park",
+      "to": "Fountain",
+      "weight": 0.05
+    },
+    {
+      "from": "Library Park",
+      "to": "Pond",
+      "weight": 0.05
+    },
+    {
+      "from": "VC Office",
+      "to": "Library",
+      "weight": 0.04
+    },
+    {
+      "from": "Library",
+      "to": "Canteen",
+      "weight": 0.05
+    },
+    {
+      "from": "Canteen",
+      "to": "Block 8",
+      "weight": 0.03
+    },
+    {
+      "from": "CV Raman Hall",
+      "to": "Block 8",
+      "weight": 0.05
+    },
+    {
+      "from": "CV Raman Hall",
+      "to": "Block 7",
+      "weight": 0.06
+    },
+    {
+      "from": "Block 9",
+      "to": "High Voltage Lab",
+      "weight": 0.05
+    },
+    {
+      "from": "Parking 3",
+      "to": "Environment Block",
+      "weight": 0.06
+    },
+    {
+      "from": "Parking 3",
+      "to": "Shed",
+      "weight": 0.05
+    },
+    {
+      "from": "Girls Hostel",
+      "to": "Block 6",
+      "weight": 0.06
+    },
+    {
+      "from": "Girls Hostel",
+      "to": "Parking 3",
+      "weight": 0.07
+    },
+    {
+      "from": "ATM",
+      "to": "Block 11",
+      "weight": 0.06
+    },
+    {
+      "from": "Parking 1",
+      "to": "Block 11",
+      "weight": 0.05
+    },
+    {
+      "from": "Green Hydrogen Lab",
+      "to": "APHRL",
+      "weight": 0.05
+    },
+    {
+      "from": "Technical Training Center",
+      "to": "Pond",
+      "weight": 0.07
+    },
+    {
+      "from": "Multipurpose Hall",
+      "to": "Civil Engineering Block",
+      "weight": 0.09
+    },
+    {
+      "from": "Volleyball Court",
+      "to": "Pharmacy Block",
+      "weight": 0.09
     }
   ]
 }
