@@ -51,7 +51,7 @@
       "y": 588
     },
     {
-      "id": "ATM",
+      "id": "KU Gate",
       "x": 884,
       "y": 18
     },
@@ -244,16 +244,21 @@
       "id": "Turbine Testing Lab",
       "x": 1198,
       "y": 165
+    },
+    {
+      "id": "ATM",
+      "x": 834,
+      "y": 18
     }
   ],
   "edges": [
     {
-      "from": "ATM",
+      "from": "KU Gate",
       "to": "Parking 1",
       "weight": 0.03
     },
     {
-      "from": "ATM",
+      "from": "KU Gate",
       "to": "Pond",
       "weight": 0.06
     },
@@ -708,7 +713,7 @@
       "weight": 0.07
     },
     {
-      "from": "ATM",
+      "from": "KU Gate",
       "to": "Block 11",
       "weight": 0.06
     },
@@ -736,6 +741,26 @@
       "from": "Volleyball Court",
       "to": "Pharmacy Block",
       "weight": 0.09
+    },
+    {
+      "from": "ATM",
+      "to": "KU Gate",
+      "weight": 0.02
+    },
+    {
+      "from": "Pharmacy Block",
+      "to": "Mesh Canteen",
+      "weight": 0.11
+    },
+    {
+      "from": "Volleyball Court",
+      "to": "Civil Engineering Block",
+      "weight": 0.09
+    },
+    {
+      "from": "Football Ground",
+      "to": "Mesh Canteen",
+      "weight": 0.11
     }
   ]
 }
