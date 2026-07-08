@@ -188,19 +188,6 @@
 		stroke: var(--accent-path);
 		stroke-width: 3;
 	}
-	.edge-label {
-		fill: #b0b0a8;
-		font-size: 11px;
-		font-weight: 600;
-		font-family: 'JetBrains Mono', monospace;
-		text-anchor: middle;
-		dominant-baseline: middle;
-		pointer-events: none;
-		paint-order: stroke fill;
-		stroke: rgba(247,247,245,0.98);
-		stroke-width: 3px;
-		transition: fill .3s;
-	}
 
 	.node-circle {
 		fill: var(--node-fill);
@@ -246,13 +233,11 @@
 		stroke-width: 3px;
 	}
 
-	#graph-wrap.zoomed-in .edge-label,
 	#graph-wrap.zoomed-in .node-label {
 		font-size: 12px;
 		stroke-width: 3.5px;
 	}
 
-	#graph-wrap.zoomed-out .edge-label,
 	#graph-wrap.zoomed-out .node-label {
 		opacity: 0.9;
 	}
@@ -269,29 +254,6 @@
 	@keyframes pulse-out {
 		0%   { r: 22px; opacity: 0.4; }
 		100% { r: 46px; opacity: 0; }
-	}
-
-	/* scroll hint */
-	.scroll-hint {
-		position: fixed;
-		bottom: 20px;
-		left: 50%;
-		transform: translateX(-50%);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 4px;
-		color: var(--text-muted);
-		font-size: 0.58rem;
-		letter-spacing: 0.1em;
-		font-weight: 500;
-		pointer-events: none;
-		animation: bounce 2.2s ease-in-out infinite;
-		z-index: 50;
-	}
-	@keyframes bounce {
-		0%,100% { transform: translateX(-50%) translateY(0); }
-		50%      { transform: translateX(-50%) translateY(5px); }
 	}
 
 	/* footer */
@@ -373,58 +335,6 @@
 	}
 	.algo-panel.bellman .result-row .value.highlight { color: var(--accent-dst); }
 
-	.compare-section { margin-top: 0; }
-	.compare-section h3 {
-		font-size: 0.84rem;
-		font-weight: 600;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: var(--text-muted);
-		margin-bottom: 14px;
-	}
-
-	table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.95rem;
-	}
-	thead tr { border-bottom: 1px solid var(--border); }
-	thead th {
-		padding: 12px 20px;
-		text-align: left;
-		font-weight: 500;
-		font-size: 0.84rem;
-		letter-spacing: 0.05em;
-		color: var(--text-muted);
-	}
-	thead th:nth-child(2) { color: var(--accent-path); }
-	thead th:nth-child(3) { color: var(--accent-dst); }
-
-	tbody tr { border-bottom: 1px solid var(--border-soft); transition: background .12s; }
-	tbody tr:hover { background: #fafaf8; }
-	tbody td { padding: 14px 20px; color: var(--text-sub); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
-	tbody td:first-child {
-		color: var(--text-muted);
-		font-family: 'Inter', sans-serif;
-		font-size: 0.82rem;
-		font-weight: 500;
-		letter-spacing: 0.04em;
-	}
-
-	.badge {
-		display: inline-block;
-		padding: 4px 12px;
-		border-radius: 4px;
-		font-size: 0.78rem;
-		font-family: 'JetBrains Mono', monospace;
-		letter-spacing: 0.03em;
-		border: 1px solid transparent;
-	}
-	.badge-blue   { background: #eff6ff; color: var(--accent-path); border-color: #bfdbfe; }
-	.badge-purple { background: #faf5ff; color: var(--accent-dst);  border-color: #e9d5ff; }
-	.badge-green  { background: #f0fdf4; color: var(--accent-src);  border-color: #bbf7d0; }
-	.badge-red    { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
-
 	.legend {
 		display: flex;
 		gap: 20px;
@@ -493,13 +403,6 @@
 	</svg>
 </div>
 
-<div class="scroll-hint">
-	<span>SCROLL FOR RESULTS</span>
-	<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9a9a92" stroke-width="2">
-		<polyline points="6 9 12 15 18 9"/>
-	</svg>
-</div>
-
 <div class="footer-spacer"></div>
 
 <footer>
@@ -551,46 +454,6 @@
 					</div>
 				</div>
 			</div>
-		</div>
-
-		<div class="compare-section">
-			<h3>Algorithm Comparison</h3>
-			<table id="compare-table">
-				<thead>
-					<tr>
-						<th>Metric</th>
-						<th>Dijkstra</th>
-						<th>Bellman-Ford</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>Path Length</td>
-						<td id="ct-d-path">—</td>
-						<td id="ct-b-path">—</td>
-					</tr>
-					<tr>
-						<td>Total Distance</td>
-						<td id="ct-d-dist">—</td>
-						<td id="ct-b-dist">—</td>
-					</tr>
-					<tr>
-						<td>Iterations</td>
-						<td id="ct-d-iter">—</td>
-						<td id="ct-b-iter">—</td>
-					</tr>
-					<tr>
-						<td>Complexity</td>
-						<td><span class="badge badge-blue">O((V+E) log V)</span></td>
-						<td><span class="badge badge-purple">O(VE)</span></td>
-					</tr>
-					<tr>
-						<td>Negative Weights</td>
-						<td><span class="badge badge-red">✗ No</span></td>
-						<td><span class="badge badge-green">✓ Yes</span></td>
-					</tr>
-				</tbody>
-			</table>
 		</div>
 
 		<div class="legend">
@@ -646,17 +509,6 @@ function syncOverlayTransforms() {
 			`translate(${group.dataset.worldX} ${group.dataset.worldY})`
 		);
 		const inner = group.querySelector(".node-scale");
-		if (inner) {
-			inner.setAttribute("transform", `scale(${inverseScale})`);
-		}
-	});
-
-	document.querySelectorAll(".edge-label-viewport").forEach((group) => {
-		group.setAttribute(
-			"transform",
-			`translate(${group.dataset.worldX} ${group.dataset.worldY})`
-		);
-		const inner = group.querySelector(".edge-label-scale");
 		if (inner) {
 			inner.setAttribute("transform", `scale(${inverseScale})`);
 		}
@@ -863,22 +715,6 @@ function buildGraph() {
 		line.dataset.from = edge.from;
 		line.dataset.to = edge.to;
 		edgeLayer.appendChild(line);
-
-		const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-		label.setAttribute("x", 0);
-		label.setAttribute("y", 0);
-		label.classList.add("edge-label");
-		label.dataset.index = String(index);
-		label.textContent = edge.weight.toFixed(2);
-		const labelViewport = document.createElementNS("http://www.w3.org/2000/svg", "g");
-		labelViewport.classList.add("edge-label-viewport");
-		labelViewport.dataset.worldX = String(midX);
-		labelViewport.dataset.worldY = String(midY - 7);
-		const labelScale = document.createElementNS("http://www.w3.org/2000/svg", "g");
-		labelScale.classList.add("edge-label-scale");
-		labelScale.appendChild(label);
-		labelViewport.appendChild(labelScale);
-		edgeLayer.appendChild(labelViewport);
 	});
 
 	graphData.nodes.forEach((node) => {
@@ -1037,13 +873,6 @@ function updateResults(dResult, bResult) {
 	document.getElementById("b-dist").textContent = formatDistance(bResult.distance);
 	document.getElementById("b-steps").textContent = bResult.steps;
 	document.getElementById("b-time").textContent = "O(VE)";
-
-	document.getElementById("ct-d-path").textContent = dResult.path.length ? `${dResult.path.length} nodes` : "—";
-	document.getElementById("ct-b-path").textContent = bResult.path.length ? `${bResult.path.length} nodes` : "—";
-	document.getElementById("ct-d-dist").textContent = formatDistance(dResult.distance);
-	document.getElementById("ct-b-dist").textContent = formatDistance(bResult.distance);
-	document.getElementById("ct-d-iter").textContent = dResult.steps;
-	document.getElementById("ct-b-iter").textContent = bResult.steps;
 }
 
 async function loadGraph() {
@@ -1114,7 +943,7 @@ function resetGraph() {
 	document.querySelectorAll(".edge").forEach((edge) => edge.classList.remove("path-edge"));
 	document.querySelectorAll(".pulse-ring").forEach((ring) => ring.classList.remove("active"));
 
-	["d-path", "d-dist", "d-steps", "d-time", "b-path", "b-dist", "b-steps", "b-time", "ct-d-path", "ct-b-path", "ct-d-dist", "ct-b-dist", "ct-d-iter", "ct-b-iter"].forEach((id) => {
+	["d-path", "d-dist", "d-steps", "d-time", "b-path", "b-dist", "b-steps", "b-time"].forEach((id) => {
 		document.getElementById(id).textContent = "—";
 	});
 

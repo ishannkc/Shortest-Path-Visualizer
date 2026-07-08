@@ -38,17 +38,6 @@ function findEdgeId(fromNode, toNode) {
 	return match ? match.id : null;
 }
 
-function updateComparison(dResult, bResult) {
-	document.getElementById("cmp-path-d").textContent = dResult.path.join(" → ");
-	document.getElementById("cmp-path-b").textContent = bResult.path.join(" → ");
-	document.getElementById("cmp-distance-d").textContent = `${dResult.distance} km`;
-	document.getElementById("cmp-distance-b").textContent = `${bResult.distance} km`;
-	document.getElementById("cmp-steps-d").textContent = `${dResult.steps} relaxations`;
-	document.getElementById("cmp-steps-b").textContent = `${bResult.steps} relaxations`;
-	document.getElementById("cmp-time-d").textContent = "O((V+E) log V)";
-	document.getElementById("cmp-time-b").textContent = "O(V × E)";
-}
-
 document.addEventListener("DOMContentLoaded", () => {
 	const srcSelect = document.getElementById("src-select");
 	const dstSelect = document.getElementById("dst-select");
@@ -75,7 +64,6 @@ document.addEventListener("DOMContentLoaded", () => {
 				id: index,
 				from: edge.from,
 				to: edge.to,
-				label: String(edge.weight),
 				color: "#848484",
 			}));
 
@@ -204,8 +192,6 @@ document.addEventListener("DOMContentLoaded", () => {
 			document.getElementById("bellman-path").textContent = bResult.path.join(" → ");
 			document.getElementById("bellman-distance").textContent = `${bResult.distance} km`;
 			document.getElementById("bellman-steps").textContent = `${bResult.steps} relaxations`;
-
-			updateComparison(dResult, bResult);
 		} catch (error) {
 			setError(error.message || "Failed to compute shortest path");
 		} finally {

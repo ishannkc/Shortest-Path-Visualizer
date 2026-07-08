@@ -658,11 +658,6 @@
       "weight": 0.05
     },
     {
-      "from": "Library Park",
-      "to": "Pond",
-      "weight": 0.05
-    },
-    {
       "from": "VC Office",
       "to": "Library",
       "weight": 0.04
@@ -761,6 +756,16 @@
       "from": "Football Ground",
       "to": "Mesh Canteen",
       "weight": 0.11
+    },
+    {
+      "from": "Canteen",
+      "to": "Block 6",
+      "weight": 0.03
+    },
+    {
+      "from": "Pond",
+      "to": "VC Office",
+      "weight": 0.05
     }
   ]
 }
