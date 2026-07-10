@@ -84,14 +84,6 @@ button {
 	border-radius: 10px;
 }
 
-.dijkstra-panel {
-	border-left: 4px solid #1e90ff;
-}
-
-.bellman-panel {
-	border-left: 4px solid #ff8c00;
-}
-
 #comparison-table {
 	width: calc(100% - 32px);
 	margin: 0 16px 32px;

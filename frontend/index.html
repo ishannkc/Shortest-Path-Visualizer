@@ -257,15 +257,17 @@
 	}
 
 	/* footer */
-	.footer-spacer { height: 100vh; }
-
 	footer {
-		position: relative;
+		position: fixed;
+		bottom: 0; left: 0; right: 0;
 		background: var(--surface);
 		border-top: 1px solid var(--border);
 		padding: 40px 0 52px;
 		z-index: 10;
+		transform: translateY(100%);
+		transition: transform 0.35s ease;
 	}
+	footer.visible { transform: translateY(0); }
 
 	.footer-inner {
 		max-width: 100%;
@@ -273,70 +275,48 @@
 		padding: 0 80px;
 	}
 
-	.results-grid {
-		display: grid;
-		grid-template-columns: 1fr 1px 1fr;
-		gap: 0 72px;
-		margin-bottom: 56px;
+	.direction {
+		text-align: center;
+		margin-bottom: 28px;
 	}
-
-	.divider-v {
-		background: var(--border);
-		width: 1px;
-	}
-
-	.algo-panel h2 {
-		font-size: 0.92rem;
+	.direction-heading {
+		font-size: 0.85rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--text-muted);
-		margin-bottom: 20px;
-		display: flex;
-		align-items: center;
-		gap: 7px;
+		margin-bottom: 14px;
 	}
-	.algo-panel h2::before {
-		content: '';
-		display: inline-block;
-		width: 6px; height: 6px;
-		border-radius: 50%;
-		background: var(--accent-path);
-		flex-shrink: 0;
-	}
-	.algo-panel.bellman h2::before { background: var(--accent-dst); }
-
-	.result-rows { display: flex; flex-direction: column; gap: 12px; }
-
-	.result-row {
-		display: flex;
-		align-items: baseline;
-		gap: 14px;
-		font-size: 1rem;
-	}
-	.result-row .label {
-		color: var(--text-muted);
-		min-width: 72px;
-		font-size: 0.8rem;
-		font-weight: 500;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		flex-shrink: 0;
-	}
-	.result-row .value {
+	.direction-path {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 1.05rem;
 		color: var(--text-sub);
 		word-break: break-all;
+		line-height: 1.6;
+		margin-bottom: 10px;
+	}
+	.direction-path .node-src {
+		color: var(--accent-src);
+		font-weight: 600;
+	}
+	.direction-path .node-dst {
+		color: var(--accent-dst);
+		font-weight: 600;
+	}
+	.direction-path .arrow {
+		color: var(--text-muted);
+		margin: 0 6px;
+	}
+	.direction-distance {
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 0.95rem;
-	}
-	.result-row .value.highlight {
-		color: var(--accent-path);
+		color: var(--text-primary);
 		font-weight: 500;
 	}
-	.algo-panel.bellman .result-row .value.highlight { color: var(--accent-dst); }
 
 	.legend {
 		display: flex;
+		justify-content: center;
 		gap: 20px;
 		margin-top: 28px;
 		flex-wrap: wrap;
@@ -403,64 +383,18 @@
 	</svg>
 </div>
 
-<div class="footer-spacer"></div>
-
 <footer>
 	<div class="footer-inner">
 
-		<div class="results-grid">
-			<div class="algo-panel" id="dijkstra-panel">
-				<h2>⬡ Dijkstra's Algorithm</h2>
-				<div class="result-rows">
-					<div class="result-row">
-						<span class="label">PATH</span>
-						<span class="value highlight" id="d-path">—</span>
-					</div>
-					<div class="result-row">
-						<span class="label">DISTANCE</span>
-						<span class="value highlight" id="d-dist">—</span>
-					</div>
-					<div class="result-row">
-						<span class="label">STEPS</span>
-						<span class="value" id="d-steps">—</span>
-					</div>
-					<div class="result-row">
-						<span class="label">TIME</span>
-						<span class="value" id="d-time">—</span>
-					</div>
-				</div>
-			</div>
-
-			<div class="divider-v"></div>
-
-			<div class="algo-panel bellman" id="bellman-panel">
-				<h2>◈ Bellman-Ford Algorithm</h2>
-				<div class="result-rows">
-					<div class="result-row">
-						<span class="label">PATH</span>
-						<span class="value highlight" id="b-path">—</span>
-					</div>
-					<div class="result-row">
-						<span class="label">DISTANCE</span>
-						<span class="value highlight" id="b-dist">—</span>
-					</div>
-					<div class="result-row">
-						<span class="label">STEPS</span>
-						<span class="value" id="b-steps">—</span>
-					</div>
-					<div class="result-row">
-						<span class="label">TIME</span>
-						<span class="value" id="b-time">—</span>
-					</div>
-				</div>
-			</div>
+		<div class="direction">
+			<h2 class="direction-heading">Direction</h2>
+			<div class="direction-path" id="direction-path">—</div>
+			<div class="direction-distance" id="direction-dist"></div>
 		</div>
 
 		<div class="legend">
-			<div class="legend-item"><div class="legend-dot ld-default"></div> Default Node</div>
 			<div class="legend-item"><div class="legend-dot ld-src"></div> Source</div>
 			<div class="legend-item"><div class="legend-dot ld-dst"></div> Destination</div>
-			<div class="legend-item"><div class="legend-dot ld-path"></div> Shortest Path</div>
 		</div>
 	</div>
 </footer>
@@ -855,24 +789,32 @@ function highlightPath(path) {
 	});
 }
 
-function formatPath(path) {
-	return path.length ? path.join(" → ") : "No path found";
-}
-
 function formatDistance(distance) {
 	return distance >= 0 ? `${distance.toFixed(2)} km` : "—";
 }
 
-function updateResults(dResult, bResult) {
-	document.getElementById("d-path").textContent = formatPath(dResult.path);
-	document.getElementById("d-dist").textContent = formatDistance(dResult.distance);
-	document.getElementById("d-steps").textContent = dResult.steps;
-	document.getElementById("d-time").textContent = "O((V+E) log V)";
+function updateDirection(result, src, dst) {
+	const pathEl = document.getElementById("direction-path");
+	const distEl = document.getElementById("direction-dist");
 
-	document.getElementById("b-path").textContent = formatPath(bResult.path);
-	document.getElementById("b-dist").textContent = formatDistance(bResult.distance);
-	document.getElementById("b-steps").textContent = bResult.steps;
-	document.getElementById("b-time").textContent = "O(VE)";
+	if (!result.path || result.path.length < 2) {
+		pathEl.textContent = "No path found";
+		distEl.textContent = "";
+		return;
+	}
+
+	const parts = result.path.map((node, i) => {
+		if (node === src) {
+			return `<span class="node-src">${node}</span>`;
+		}
+		if (node === dst) {
+			return `<span class="node-dst">${node}</span>`;
+		}
+		return node;
+	});
+
+	pathEl.innerHTML = parts.join('<span class="arrow">→</span>');
+	distEl.textContent = formatDistance(result.distance);
 }
 
 async function loadGraph() {
@@ -920,10 +862,11 @@ async function findPath() {
 			throw new Error(data.error || "Failed to fetch shortest path");
 		}
 
-		updateResults(data.dijkstra, data.bellman_ford);
-		highlightPath(data.dijkstra.path.length ? data.dijkstra.path : data.bellman_ford.path);
+		const chosen = data.dijkstra.path.length ? data.dijkstra : data.bellman_ford;
+		updateDirection(chosen, src, dst);
+		highlightPath(chosen.path);
 		updateNodeVisuals();
-		document.querySelector("footer").scrollIntoView({ behavior: "smooth" });
+		document.querySelector("footer").classList.add("visible");
 	} catch (error) {
 		setError(error.message || "Failed to compute shortest path");
 	} finally {
@@ -943,12 +886,11 @@ function resetGraph() {
 	document.querySelectorAll(".edge").forEach((edge) => edge.classList.remove("path-edge"));
 	document.querySelectorAll(".pulse-ring").forEach((ring) => ring.classList.remove("active"));
 
-	["d-path", "d-dist", "d-steps", "d-time", "b-path", "b-dist", "b-steps", "b-time"].forEach((id) => {
-		document.getElementById(id).textContent = "—";
-	});
+	document.getElementById("direction-path").textContent = "—";
+	document.getElementById("direction-dist").textContent = "";
+	document.querySelector("footer").classList.remove("visible");
 
 	clickState = 0;
-	window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
