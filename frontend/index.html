@@ -217,7 +217,7 @@
 		appearance: none;
 		-webkit-appearance: none;
 		background: var(--surface);
-		color: var(--text-primary);
+		color: var(--text-sub);
 		border: 1px solid var(--border);
 		border-radius: 6px;
 		padding: 10px 32px 10px 12px;
@@ -476,6 +476,18 @@
 		stroke: var(--accent-path);
 		stroke-width: 2.5;
 		filter: drop-shadow(0 0 14px rgba(37,99,235,0.4));
+	}
+	.node-circle.source-node.visited {
+		fill: #f0fdf4;
+		stroke: var(--accent-src);
+		stroke-width: 2;
+		filter: drop-shadow(0 2px 8px rgba(22,163,74,0.18));
+	}
+	.node-circle.dest-node.visited {
+		fill: #faf5ff;
+		stroke: var(--accent-dst);
+		stroke-width: 2;
+		filter: drop-shadow(0 2px 8px rgba(147,51,234,0.18));
 	}
 	@keyframes node-bounce {
 		0%, 100% { transform: scale(1); }
@@ -1051,6 +1063,19 @@ function nodeClick(nodeId) {
 		return;
 	}
 
+	if (nodeId === srcSelect.value) {
+		srcSelect.value = "";
+		clickState = 0;
+		updateNodeVisuals();
+		return;
+	}
+	if (nodeId === dstSelect.value) {
+		dstSelect.value = "";
+		clickState = 0;
+		updateNodeVisuals();
+		return;
+	}
+
 	if (clickState === 0) {
 		srcSelect.value = nodeId;
 		clickState = 1;
@@ -1202,6 +1227,13 @@ async function startVisualization(src, dst, algorithm) {
 	const runButton = document.querySelector(".btn-find");
 	runButton.textContent = "Visualizing...";
 
+	const firstNode = vizData.visited_nodes[0];
+	const firstGroup = document.querySelector(`.node-viewport[data-id="${firstNode}"]`);
+	if (firstGroup) {
+		const firstCircle = firstGroup.querySelector(".node-circle");
+		if (firstCircle) firstCircle.classList.add("visiting");
+	}
+
 	vizTimer = setInterval(() => {
 		if (vizStep >= vizData.visited_nodes.length) {
 			stopVisualization();
@@ -1274,7 +1306,18 @@ function animatePath(path, src, dst, result, cssClass) {
 		if (edgeIdx !== -1) {
 			setTimeout(() => {
 				const edge = document.querySelector(`.edge[data-index="${edgeIdx}"]`);
-				if (edge) edge.classList.add(cssClass);
+				if (edge) {
+					if (edge.dataset.from === path[i + 1] && edge.dataset.to === path[i] && !edge.dataset.swapped) {
+						const x1 = edge.getAttribute("x1");
+						const y1 = edge.getAttribute("y1");
+						edge.setAttribute("x1", edge.getAttribute("x2"));
+						edge.setAttribute("y1", edge.getAttribute("y2"));
+						edge.setAttribute("x2", x1);
+						edge.setAttribute("y2", y1);
+						edge.dataset.swapped = "true";
+					}
+					edge.classList.add(cssClass);
+				}
 				animatedCount += 1;
 				if (animatedCount === totalEdges) {
 					showResults();
@@ -1308,6 +1351,8 @@ async function findPath() {
 		setError("Source and destination must be different.");
 		return;
 	}
+
+	clearPathDisplay();
 
 	if (selectedAlgorithm) {
 		const runButton = document.querySelector(".btn-find");
@@ -1365,8 +1410,10 @@ function resetGraph() {
 
 	clickState = 0;
 
-	activeMode = null;
+	activeMode = "walking";
 	document.querySelectorAll(".mode-btn").forEach((btn) => btn.classList.remove("active"));
+	const walkingBtn = document.querySelector('.mode-btn[data-mode="walking"]');
+	if (walkingBtn) walkingBtn.classList.add("active");
 	updateSelectsDisabled();
 
 	selectedAlgorithm = null;
