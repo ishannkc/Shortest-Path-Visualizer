@@ -1,5 +1,6 @@
 # Shortest Path Visualizer
 
+![Shortest Path Visualizer preview](assets/demo.gif)
 Shortest Path Visualizer is a web app that compares **Dijkstra** and **Bellman-Ford** on a weighted
 university road network graph. It supports both **walking** and **vehicle** transport modes, with
 parking-lot integration for multi-modal routing. The app exposes a Flask API and serves a lightweight
