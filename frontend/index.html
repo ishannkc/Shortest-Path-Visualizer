@@ -347,6 +347,9 @@
 		vector-effect: non-scaling-stroke;
 		transition: stroke .4s, stroke-width .3s, opacity .3s;
 	}
+	.edge.vehicle {
+		stroke-width: 3.5;
+	}
 	.edge.path-edge {
 		stroke: var(--accent-path);
 		stroke-width: 3;
@@ -1073,6 +1076,9 @@ function buildGraph() {
 		line.setAttribute("x2", toPosition.x);
 		line.setAttribute("y2", toPosition.y);
 		line.classList.add("edge");
+		if (edge.type === "vehicle") {
+			line.classList.add("vehicle");
+		}
 		line.dataset.index = String(index);
 		line.dataset.from = edge.from;
 		line.dataset.to = edge.to;
