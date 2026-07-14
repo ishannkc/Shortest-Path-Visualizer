@@ -181,7 +181,7 @@
       "y": 256
     },
     {
-      "id": "Block 11",
+      "id": "Block 10",
       "x": 849,
       "y": 167
     },
@@ -274,7 +274,7 @@
     },
     {
       "from": "Pond",
-      "to": "Block 11",
+      "to": "Block 10",
       "weight": 0.05
     },
     {
@@ -503,7 +503,7 @@
       "weight": 0.06
     },
     {
-      "from": "Block 11",
+      "from": "Block 10",
       "to": "VC Office",
       "weight": 0.05
     },
@@ -554,7 +554,7 @@
     },
     {
       "from": "Civil Engineering Block",
-      "to": "Block 11",
+      "to": "Block 10",
       "weight": 0.06
     },
     {
@@ -644,7 +644,7 @@
     },
     {
       "from": "Technical Training Center",
-      "to": "Block 11",
+      "to": "Block 10",
       "weight": 0.04
     },
     {
@@ -709,12 +709,12 @@
     },
     {
       "from": "KU Gate",
-      "to": "Block 11",
+      "to": "Block 10",
       "weight": 0.06
     },
     {
       "from": "Parking 1",
-      "to": "Block 11",
+      "to": "Block 10",
       "weight": 0.05
     },
     {
@@ -766,6 +766,7 @@
       "from": "Pond",
       "to": "VC Office",
       "weight": 0.05
+      
     }
   ]
 }
