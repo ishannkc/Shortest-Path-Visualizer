@@ -350,6 +350,9 @@
 	.edge.path-edge {
 		stroke: var(--accent-path);
 		stroke-width: 3;
+		stroke-dasharray: 2000;
+		stroke-dashoffset: 2000;
+		animation: draw-path-edge 1s ease-out forwards;
 	}
 	.edge.exploring {
 		stroke: #60a5fa;
@@ -365,7 +368,17 @@
 		opacity: 0.6;
 		transition: stroke .3s, opacity .3s;
 	}
+	.edge.path-edge.explored,
+	.edge.path-edge.exploring {
+		stroke: var(--accent-path);
+		stroke-width: 3;
+		opacity: 1;
+	}
 	@keyframes draw-edge {
+		0%   { stroke-dashoffset: 2000; }
+		100% { stroke-dashoffset: 0; }
+	}
+	@keyframes draw-path-edge {
 		0%   { stroke-dashoffset: 2000; }
 		100% { stroke-dashoffset: 0; }
 	}
@@ -1152,11 +1165,7 @@ async function startVisualization(src, dst, algorithm) {
 		if (vizStep >= vizData.visited_nodes.length) {
 			stopVisualization();
 			if (vizData.path && vizData.path.length >= 2) {
-				document.querySelectorAll(".edge").forEach((e) => e.classList.remove("explored", "exploring"));
-				highlightPath(vizData.path);
-				updateDirection(vizData, src, dst);
-				updateNodeVisuals();
-				document.querySelector("footer").classList.add("visible");
+				animatePath(vizData.path, src, dst, vizData);
 			}
 			return;
 		}
@@ -1208,6 +1217,38 @@ async function startVisualization(src, dst, algorithm) {
 	}, 380);
 }
 
+function animatePath(path, src, dst, result) {
+	document.querySelectorAll(".edge").forEach((e) => e.classList.remove("path-edge"));
+	document.querySelectorAll(".node-circle").forEach((c) => c.classList.add("on-path"));
+	document.querySelectorAll(".pulse-ring").forEach((r) => r.classList.add("active"));
+
+	const totalEdges = path.length - 1;
+	let animatedCount = 0;
+	const showResults = () => {
+		updateDirection(result, src, dst);
+		updateNodeVisuals();
+		document.querySelector("footer").classList.add("visible");
+	};
+	for (let i = 0; i < totalEdges; i += 1) {
+		const edgeIdx = findEdgeIndex(path[i], path[i + 1]);
+		if (edgeIdx !== -1) {
+			setTimeout(() => {
+				const edge = document.querySelector(`.edge[data-index="${edgeIdx}"]`);
+				if (edge) edge.classList.add("path-edge");
+				animatedCount += 1;
+				if (animatedCount === totalEdges) {
+					showResults();
+				}
+			}, 350 * (i + 1));
+		} else {
+			animatedCount += 1;
+			if (animatedCount === totalEdges) {
+				showResults();
+			}
+		}
+	}
+}
+
 async function findPath() {
 	const src = srcSelect.value;
 	const dst = dstSelect.value;
@@ -1257,10 +1298,7 @@ async function findPath() {
 		}
 
 		const chosen = data.dijkstra.path.length ? data.dijkstra : data.bellman_ford;
-		updateDirection(chosen, src, dst);
-		highlightPath(chosen.path);
-		updateNodeVisuals();
-		document.querySelector("footer").classList.add("visible");
+		animatePath(chosen.path, src, dst, chosen);
 	} catch (error) {
 		setError(error.message || "Failed to compute shortest path");
 	} finally {
