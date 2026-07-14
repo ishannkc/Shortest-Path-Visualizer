@@ -518,6 +518,8 @@
 		z-index: 10;
 		transform: translateY(100%);
 		transition: transform 0.35s ease;
+		max-height: 55vh;
+		overflow-y: auto;
 	}
 	footer.visible { transform: translateY(0); }
 
@@ -613,6 +615,60 @@
 	.ld-src     { color: var(--accent-src);  background: #f0fdf4; }
 	.ld-dst     { color: var(--accent-dst);  background: #faf5ff; }
 	.ld-path    { color: var(--accent-path); background: #eff6ff; }
+
+	.analytics {
+		margin-top: 24px;
+		padding-top: 20px;
+		border-top: 1px solid var(--border-soft);
+	}
+	.analytics-heading {
+		font-size: 0.85rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+		margin-bottom: 16px;
+		text-align: center;
+	}
+	.analytics-table {
+		width: 100%;
+		max-width: 500px;
+		margin: 0 auto;
+		border-collapse: separate;
+		border-spacing: 0;
+		font-size: 0.88rem;
+		background: rgba(0,0,0,0.015);
+		border-radius: 10px;
+		overflow: hidden;
+		border: 1px solid var(--border-soft);
+	}
+	.analytics-table tr {
+		transition: background .12s;
+	}
+	.analytics-table tr:nth-child(even) {
+		background: rgba(0,0,0,0.02);
+	}
+	.analytics-table td {
+		padding: 10px 18px;
+		color: var(--text-sub);
+		border-bottom: 1px solid var(--border-soft);
+	}
+	.analytics-table tr:last-child td {
+		border-bottom: none;
+	}
+	.analytics-table td:first-child {
+		font-weight: 500;
+		color: var(--text-primary);
+		letter-spacing: 0.01em;
+		width: 55%;
+	}
+	.analytics-table td:last-child {
+		text-align: right;
+		font-weight: 500;
+		font-family: 'JetBrains Mono', monospace;
+		color: var(--text-sub);
+		padding-right: 20px;
+	}
 </style>
 </head>
 <body>
@@ -712,6 +768,13 @@
 		<div class="legend">
 			<div class="legend-item"><div class="legend-dot ld-src"></div> Source</div>
 			<div class="legend-item"><div class="legend-dot ld-dst"></div> Destination</div>
+		</div>
+
+		<div class="analytics" id="analytics" style="display:none">
+			<h2 class="analytics-heading">Algorithm Analytics</h2>
+			<table class="analytics-table">
+				<tbody id="analytics-body"></tbody>
+			</table>
 		</div>
 	</div>
 </footer>
@@ -1139,6 +1202,60 @@ function formatDistance(distance) {
 	return distance >= 0 ? `${distance.toFixed(2)} km` : "—";
 }
 
+function updateAnalytics(result, algorithm) {
+	const body = document.getElementById("analytics-body");
+	body.innerHTML = "";
+
+	const rows = [];
+
+	if (algorithm) {
+		const name = algorithm === "dijkstra" ? "Dijkstra" : "Bellman-Ford";
+		rows.push(["Algorithm", name]);
+	}
+
+	if (result.visited_nodes) {
+		rows.push(["Nodes Visited", result.visited_nodes.length]);
+	}
+
+	if (result.explored_edges) {
+		rows.push(["Edges Explored", result.explored_edges.length]);
+	}
+
+	if (result.steps !== undefined) {
+		rows.push(["Relaxation Steps", result.steps]);
+	}
+
+	if (result.path && result.path.length) {
+		rows.push(["Path Length", `${result.path.length} nodes`]);
+	}
+
+	if (result.distance !== undefined && result.distance >= 0) {
+		rows.push(["Total Distance", `${result.distance} km`]);
+	}
+
+	if (result.negative_cycle !== undefined) {
+		rows.push(["Negative Cycle", result.negative_cycle ? "Detected" : "None"]);
+	}
+
+	if (!algorithm) {
+		document.getElementById("analytics").style.display = "none";
+		return;
+	}
+
+	rows.forEach(([label, value]) => {
+		const tr = document.createElement("tr");
+		const tdLabel = document.createElement("td");
+		tdLabel.textContent = label;
+		const tdValue = document.createElement("td");
+		tdValue.textContent = value;
+		tr.appendChild(tdLabel);
+		tr.appendChild(tdValue);
+		body.appendChild(tr);
+	});
+
+	document.getElementById("analytics").style.display = "block";
+}
+
 function updateDirection(result, src, dst) {
 	const pathEl = document.getElementById("direction-path");
 	const distEl = document.getElementById("direction-dist");
@@ -1181,6 +1298,7 @@ function clearPathDisplay() {
 	document.querySelectorAll(".pulse-ring").forEach((r) => r.classList.remove("active"));
 	document.getElementById("direction-path").textContent = "—";
 	document.getElementById("direction-dist").textContent = "";
+	document.getElementById("analytics").style.display = "none";
 	document.querySelector("footer").classList.remove("visible");
 }
 
@@ -1238,7 +1356,7 @@ async function startVisualization(src, dst, algorithm) {
 		if (vizStep >= vizData.visited_nodes.length) {
 			stopVisualization();
 			if (vizData.path && vizData.path.length >= 2) {
-				animatePath(vizData.path, src, dst, vizData, "path-edge-viz");
+				animatePath(vizData.path, src, dst, vizData, "path-edge-viz", selectedAlgorithm);
 			}
 			return;
 		}
@@ -1290,7 +1408,7 @@ async function startVisualization(src, dst, algorithm) {
 	}, 380);
 }
 
-function animatePath(path, src, dst, result, cssClass) {
+function animatePath(path, src, dst, result, cssClass, algorithm) {
 	cssClass = cssClass || "path-edge";
 	document.querySelectorAll(".edge").forEach((e) => e.classList.remove("path-edge", "path-edge-viz"));
 
@@ -1298,6 +1416,7 @@ function animatePath(path, src, dst, result, cssClass) {
 	let animatedCount = 0;
 	const showResults = () => {
 		updateDirection(result, src, dst);
+		updateAnalytics(result, algorithm);
 		updateNodeVisuals();
 		document.querySelector("footer").classList.add("visible");
 	};
