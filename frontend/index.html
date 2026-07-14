@@ -1294,10 +1294,12 @@ function updateAnalytics(result, algorithm) {
 
 	if (result.path && result.path.length) {
 		rows.push(["Path Length", `${result.path.length} nodes`]);
+	} else {
+		rows.push(["Path Length", "No path found"]);
 	}
 
-	if (result.distance !== undefined && result.distance >= 0) {
-		rows.push(["Total Distance", `${result.distance} km`]);
+	if (result.distance !== undefined) {
+		rows.push(["Total Distance", result.distance >= 0 ? `${result.distance} km` : "Unreachable"]);
 	}
 
 	if (result.negative_cycle !== undefined) {
@@ -1429,9 +1431,7 @@ async function startVisualization(src, dst, algorithm) {
 	vizTimer = setInterval(() => {
 		if (vizStep >= vizData.visited_nodes.length) {
 			stopVisualization();
-			if (vizData.path && vizData.path.length >= 2) {
-				animatePath(vizData.path, src, dst, vizData, "path-edge-viz", selectedAlgorithm);
-			}
+			animatePath(vizData.path || [], src, dst, vizData, "path-edge-viz", selectedAlgorithm);
 			return;
 		}
 
@@ -1509,6 +1509,12 @@ function animatePath(path, src, dst, result, cssClass, algorithm) {
 		document.querySelector("footer").classList.add("visible");
 		document.getElementById("results-handle").classList.remove("visible", "open");
 	};
+
+	if (totalEdges <= 0) {
+		showResults();
+		return;
+	}
+
 	for (let i = 0; i < totalEdges; i += 1) {
 		const edgeIdx = findEdgeIndex(path[i], path[i + 1]);
 		if (edgeIdx !== -1) {

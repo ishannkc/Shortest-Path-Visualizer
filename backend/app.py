@@ -12,7 +12,7 @@ if ROOT_DIR not in sys.path:
 
 from algorithms.bellman_ford import bellman_ford
 from algorithms.dijkstra import dijkstra
-from backend.graph_builder import load_graph, load_vehicle_graph, load_graph_data, PARKING_NODES
+from backend.graph_builder import load_graph, load_vehicle_graph, load_vehicle_edge_list, load_graph_data, PARKING_NODES
 
 
 app = Flask(__name__)
@@ -20,6 +20,7 @@ CORS(app)
 
 ADJ_LIST, EDGE_LIST, NODES, _ = load_graph()
 VEHICLE_ADJ_LIST = load_vehicle_graph()
+VEHICLE_EDGE_LIST = load_vehicle_edge_list()
 
 
 @app.get("/graph")
@@ -103,6 +104,51 @@ def get_shortest_path():
 	return jsonify({"dijkstra": d_result, "bellman_ford": b_result})
 
 
+def _run_algorithm(algorithm, adj_list, edge_list, nodes, src, dst):
+	if algorithm == "dijkstra":
+		return dijkstra(adj_list, src, dst)
+	return bellman_ford(edge_list, nodes, src, dst)
+
+
+def visualize_vehicle_path(src, dst, algorithm):
+	direct = _run_algorithm(algorithm, VEHICLE_ADJ_LIST, VEHICLE_EDGE_LIST, NODES, src, dst)
+	if direct.get("path") and direct.get("distance", -1) >= 0:
+		return direct
+
+	best = None
+	for parking in PARKING_NODES:
+		drive = _run_algorithm(algorithm, VEHICLE_ADJ_LIST, VEHICLE_EDGE_LIST, NODES, src, parking)
+		if not drive.get("path") or drive.get("distance", -1) < 0:
+			continue
+
+		walk = _run_algorithm(algorithm, ADJ_LIST, EDGE_LIST, NODES, parking, dst)
+		if not walk.get("path") or walk.get("distance", -1) < 0:
+			continue
+
+		if best is None or walk["distance"] < best["walk_distance"]:
+			best = {
+				"path": drive["path"] + walk["path"][1:],
+				"distance": round(drive["distance"] + walk["distance"], 4),
+				"steps": drive["steps"] + walk["steps"],
+				"visited_nodes": drive["visited_nodes"] + walk["visited_nodes"],
+				"explored_edges": drive["explored_edges"] + walk["explored_edges"],
+				"step_edges": drive["step_edges"] + walk["step_edges"],
+				"parking": parking,
+				"drive_distance": drive["distance"],
+				"walk_distance": walk["distance"],
+				"drive_path": drive["path"],
+				"walk_path": walk["path"],
+			}
+
+	if best:
+		return best
+
+	return {
+		"path": [], "distance": -1, "steps": 0,
+		"visited_nodes": [], "explored_edges": [], "step_edges": [],
+	}
+
+
 @app.get("/visualize")
 def get_visualization():
 	src = request.args.get("src")
@@ -121,10 +167,8 @@ def get_visualization():
 		return jsonify({"error": f"Invalid node name: {dst}"}), 400
 
 	if mode == "vehicle":
-		result = find_vehicle_path(src, dst)
-		return jsonify(result)
-
-	if algorithm == "dijkstra":
+		result = visualize_vehicle_path(src, dst, algorithm)
+	elif algorithm == "dijkstra":
 		result = dijkstra(ADJ_LIST, src, dst)
 	elif algorithm == "bellman_ford":
 		result = bellman_ford(EDGE_LIST, NODES, src, dst)
