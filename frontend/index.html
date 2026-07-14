@@ -1376,8 +1376,9 @@ function stopVisualization() {
 async function startVisualization(src, dst, algorithm) {
 	clearVisualization();
 
+	const mode = activeMode || "walking";
 	const response = await fetch(
-		`${API_BASE}/visualize?src=${encodeURIComponent(src)}&dst=${encodeURIComponent(dst)}&algorithm=${encodeURIComponent(algorithm)}`
+		`${API_BASE}/visualize?src=${encodeURIComponent(src)}&dst=${encodeURIComponent(dst)}&algorithm=${encodeURIComponent(algorithm)}&mode=${encodeURIComponent(mode)}`
 	);
 	if (!response.ok) {
 		throw new Error("Failed to fetch visualization data");
@@ -1504,6 +1505,7 @@ function animatePath(path, src, dst, result, cssClass, algorithm) {
 async function findPath() {
 	const src = srcSelect.value;
 	const dst = dstSelect.value;
+	const mode = activeMode || "walking";
 	setError("");
 
 	if (!graphData) {
@@ -1543,7 +1545,7 @@ async function findPath() {
 
 	try {
 		const response = await fetch(
-			`${API_BASE}/shortest-path?src=${encodeURIComponent(src)}&dst=${encodeURIComponent(dst)}`
+			`${API_BASE}/shortest-path?src=${encodeURIComponent(src)}&dst=${encodeURIComponent(dst)}&mode=${encodeURIComponent(mode)}`
 		);
 		const data = await response.json();
 
@@ -1551,7 +1553,15 @@ async function findPath() {
 			throw new Error(data.error || "Failed to fetch shortest path");
 		}
 
-		const chosen = data.dijkstra.path.length ? data.dijkstra : data.bellman_ford;
+		let chosen;
+		if (mode === "vehicle") {
+			chosen = data.vehicle;
+			if (!chosen.path || chosen.path.length < 2) {
+				throw new Error("No vehicle-accessible path found");
+			}
+		} else {
+			chosen = data.dijkstra.path.length ? data.dijkstra : data.bellman_ford;
+		}
 		animatePath(chosen.path, src, dst, chosen);
 	} catch (error) {
 		setError(error.message || "Failed to compute shortest path");

@@ -12,13 +12,14 @@ if ROOT_DIR not in sys.path:
 
 from algorithms.bellman_ford import bellman_ford
 from algorithms.dijkstra import dijkstra
-from backend.graph_builder import load_graph, load_graph_data
+from backend.graph_builder import load_graph, load_vehicle_graph, load_graph_data, PARKING_NODES
 
 
 app = Flask(__name__)
 CORS(app)
 
 ADJ_LIST, EDGE_LIST, NODES, _ = load_graph()
+VEHICLE_ADJ_LIST = load_vehicle_graph()
 
 
 @app.get("/graph")
@@ -41,10 +42,37 @@ def get_nodes():
 	return jsonify(NODES)
 
 
+def find_vehicle_path(src, dst):
+	best = {"path": [], "distance": -1, "parking": None, "drive_path": [], "walk_path": []}
+
+	for parking in PARKING_NODES:
+		drive = dijkstra(VEHICLE_ADJ_LIST, src, parking)
+		if drive["distance"] < 0:
+			continue
+		walk = dijkstra(ADJ_LIST, parking, dst)
+		if walk["distance"] < 0:
+			continue
+		total = round(drive["distance"] + walk["distance"], 4)
+		if best["distance"] < 0 or walk["distance"] < best.get("walk_distance", float("inf")):
+			combined_path = drive["path"] + walk["path"][1:]
+			best = {
+				"path": combined_path,
+				"distance": total,
+				"parking": parking,
+				"drive_distance": drive["distance"],
+				"walk_distance": walk["distance"],
+				"drive_path": drive["path"],
+				"walk_path": walk["path"],
+			}
+
+	return best
+
+
 @app.get("/shortest-path")
 def get_shortest_path():
 	src = request.args.get("src")
 	dst = request.args.get("dst")
+	mode = request.args.get("mode", "walking")
 
 	if not src or not dst:
 		return jsonify({"error": "src and dst are required"}), 400
@@ -53,6 +81,10 @@ def get_shortest_path():
 		return jsonify({"error": f"Invalid node name: {src}"}), 400
 	if dst not in NODES:
 		return jsonify({"error": f"Invalid node name: {dst}"}), 400
+
+	if mode == "vehicle":
+		result = find_vehicle_path(src, dst)
+		return jsonify({"vehicle": result})
 
 	d_result = dijkstra(ADJ_LIST, src, dst)
 	b_result = bellman_ford(EDGE_LIST, NODES, src, dst)
@@ -64,6 +96,7 @@ def get_visualization():
 	src = request.args.get("src")
 	dst = request.args.get("dst")
 	algorithm = request.args.get("algorithm")
+	mode = request.args.get("mode", "walking")
 
 	if not src or not dst:
 		return jsonify({"error": "src and dst are required"}), 400
@@ -74,6 +107,10 @@ def get_visualization():
 		return jsonify({"error": f"Invalid node name: {src}"}), 400
 	if dst not in NODES:
 		return jsonify({"error": f"Invalid node name: {dst}"}), 400
+
+	if mode == "vehicle":
+		result = find_vehicle_path(src, dst)
+		return jsonify(result)
 
 	if algorithm == "dijkstra":
 		result = dijkstra(ADJ_LIST, src, dst)
