@@ -345,11 +345,29 @@
 		stroke: var(--edge-idle);
 		stroke-width: 1.5;
 		vector-effect: non-scaling-stroke;
-		transition: stroke .4s, stroke-width .3s;
+		transition: stroke .4s, stroke-width .3s, opacity .3s;
 	}
 	.edge.path-edge {
 		stroke: var(--accent-path);
 		stroke-width: 3;
+	}
+	.edge.exploring {
+		stroke: #60a5fa;
+		stroke-width: 2;
+		stroke-dasharray: 2000;
+		stroke-dashoffset: 2000;
+		animation: draw-edge 0.35s ease-out forwards;
+		opacity: 1;
+	}
+	.edge.explored {
+		stroke: #93c5fd;
+		stroke-width: 1.5;
+		opacity: 0.6;
+		transition: stroke .3s, opacity .3s;
+	}
+	@keyframes draw-edge {
+		0%   { stroke-dashoffset: 2000; }
+		100% { stroke-dashoffset: 0; }
 	}
 
 	.node-circle {
@@ -1096,6 +1114,7 @@ function clearVisualization() {
 	vizStep = 0;
 	visualizationActive = false;
 	document.querySelectorAll(".node-circle").forEach((c) => c.classList.remove("visiting", "visited"));
+	document.querySelectorAll(".edge").forEach((e) => e.classList.remove("exploring", "explored"));
 }
 
 function stopVisualization() {
@@ -1133,6 +1152,7 @@ async function startVisualization(src, dst, algorithm) {
 		if (vizStep >= vizData.visited_nodes.length) {
 			stopVisualization();
 			if (vizData.path && vizData.path.length >= 2) {
+				document.querySelectorAll(".edge").forEach((e) => e.classList.remove("explored", "exploring"));
 				highlightPath(vizData.path);
 				updateDirection(vizData, src, dst);
 				updateNodeVisuals();
@@ -1151,6 +1171,27 @@ async function startVisualization(src, dst, algorithm) {
 			}
 		}
 
+		function findEdgeLine(from, to) {
+			let el = document.querySelector(`.edge[data-from="${from}"][data-to="${to}"]`);
+			if (!el) {
+				el = document.querySelector(`.edge[data-from="${to}"][data-to="${from}"]`);
+			}
+			return el;
+		}
+
+		if (vizData.step_edges && vizStep < vizData.step_edges.length) {
+			const edges = vizData.step_edges[vizStep];
+			edges.forEach(([from, to]) => {
+				const line = findEdgeLine(from, to);
+				if (line && !line.classList.contains("explored")) {
+					line.classList.remove("exploring");
+					line.classList.add("explored");
+					line.classList.add("exploring");
+					setTimeout(() => line.classList.remove("exploring"), 380);
+				}
+			});
+		}
+
 		const nextIdx = vizStep + 1;
 		if (nextIdx < vizData.visited_nodes.length) {
 			const nextId = vizData.visited_nodes[nextIdx];
@@ -1164,7 +1205,7 @@ async function startVisualization(src, dst, algorithm) {
 		}
 
 		vizStep += 1;
-	}, 300);
+	}, 380);
 }
 
 async function findPath() {
