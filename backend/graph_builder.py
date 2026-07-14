@@ -102,7 +102,7 @@ def load_vehicle_graph():
 	return adj_list
 
 
-PARKING_NODES = ["Parking 1", "Parking 2", "Parking 3"]
+PARKING_NODES = ["Parking 1", "Parking 2", "Parking 3", "Mechanical Workshop", "NTIC Research Center", "Boys Hostel", "Block 9", "Civil Engineering Block", "Pharmacy Block", "Mesh Canteen", "Buspark", "Environment Block", "School of Law"]
 
 
 def load_graph_data():

@@ -43,6 +43,18 @@ def get_nodes():
 
 
 def find_vehicle_path(src, dst):
+	direct = dijkstra(VEHICLE_ADJ_LIST, src, dst)
+	if direct["distance"] >= 0:
+		return {
+			"path": direct["path"],
+			"distance": direct["distance"],
+			"parking": None,
+			"drive_distance": direct["distance"],
+			"walk_distance": 0,
+			"drive_path": direct["path"],
+			"walk_path": [],
+		}
+
 	best = {"path": [], "distance": -1, "parking": None, "drive_path": [], "walk_path": []}
 
 	for parking in PARKING_NODES:
