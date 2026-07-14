@@ -355,7 +355,7 @@
 		animation: draw-path-edge 1s ease-out forwards;
 	}
 	.edge.exploring {
-		stroke: #60a5fa;
+		stroke: #2563eb;
 		stroke-width: 2;
 		stroke-dasharray: 2000;
 		stroke-dashoffset: 2000;
@@ -363,9 +363,9 @@
 		opacity: 1;
 	}
 	.edge.explored {
-		stroke: #93c5fd;
+		stroke: #3b82f6;
 		stroke-width: 1.5;
-		opacity: 0.6;
+		opacity: 0.55;
 		transition: stroke .3s, opacity .3s;
 	}
 	.edge.path-edge-viz {
@@ -462,20 +462,20 @@
 		transition: fill .25s, stroke .25s, filter .25s;
 	}
 	.node-circle.visited {
-		fill: #eff6ff;
-		stroke: #60a5fa;
+		fill: #bfdbfe;
+		stroke: #3b82f6;
 		stroke-width: 2;
-		filter: drop-shadow(0 0 6px rgba(37,99,235,0.15));
+		filter: drop-shadow(0 0 8px rgba(59,130,246,0.25));
 		transition: fill .3s, stroke .3s;
 		transform-box: fill-box;
 		transform-origin: center;
 		animation: node-bounce 2s ease-in-out infinite;
 	}
 	.node-circle.visited:hover {
-		fill: #dbeafe;
-		stroke: var(--accent-path);
+		fill: #93c5fd;
+		stroke: #2563eb;
 		stroke-width: 2.5;
-		filter: drop-shadow(0 0 14px rgba(37,99,235,0.4));
+		filter: drop-shadow(0 0 16px rgba(37,99,235,0.45));
 	}
 	.node-circle.source-node.visited {
 		fill: #f0fdf4;
@@ -522,6 +522,43 @@
 		overflow-y: auto;
 	}
 	footer.visible { transform: translateY(0); }
+
+	#results-handle {
+		position: fixed;
+		bottom: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 20;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		background: #444;
+		color: #fff;
+		border: none;
+		border-radius: 20px 20px 0 0;
+		padding: 8px 20px;
+		font-family: 'Inter', sans-serif;
+		font-size: 0.82rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: opacity .25s, transform .2s;
+		box-shadow: 0 -2px 12px rgba(0,0,0,0.1);
+		opacity: 0;
+		pointer-events: none;
+	}
+	#results-handle.visible {
+		opacity: 1;
+		pointer-events: auto;
+	}
+	#results-handle:hover {
+		transform: translateX(-50%) translateY(-2px);
+	}
+	#results-handle svg {
+		transition: transform .2s;
+	}
+	#results-handle.open svg {
+		transform: rotate(180deg);
+	}
 
 	.footer-close {
 		position: absolute;
@@ -778,6 +815,11 @@
 		</div>
 	</div>
 </footer>
+
+<div id="results-handle">
+	<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+	<span>View Results</span>
+</div>
 
 <script>
 const API_BASE = "";
@@ -1299,6 +1341,7 @@ function clearPathDisplay() {
 	document.getElementById("direction-path").textContent = "—";
 	document.getElementById("direction-dist").textContent = "";
 	document.getElementById("analytics").style.display = "none";
+	document.getElementById("results-handle").classList.remove("visible", "open");
 	document.querySelector("footer").classList.remove("visible");
 }
 
@@ -1419,6 +1462,7 @@ function animatePath(path, src, dst, result, cssClass, algorithm) {
 		updateAnalytics(result, algorithm);
 		updateNodeVisuals();
 		document.querySelector("footer").classList.add("visible");
+		document.getElementById("results-handle").classList.remove("visible", "open");
 	};
 	for (let i = 0; i < totalEdges; i += 1) {
 		const edgeIdx = findEdgeIndex(path[i], path[i + 1]);
@@ -1526,6 +1570,7 @@ function resetGraph() {
 	document.getElementById("direction-path").textContent = "—";
 	document.getElementById("direction-dist").textContent = "";
 	document.querySelector("footer").classList.remove("visible");
+	document.getElementById("results-handle").classList.remove("visible", "open");
 
 	clickState = 0;
 
@@ -1607,6 +1652,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 	document.getElementById("footer-close").addEventListener("click", () => {
 		document.querySelector("footer").classList.remove("visible");
+		document.getElementById("results-handle").classList.add("visible");
+		document.getElementById("results-handle").classList.remove("open");
+	});
+
+	document.getElementById("results-handle").addEventListener("click", () => {
+		const footer = document.querySelector("footer");
+		const handle = document.getElementById("results-handle");
+		footer.classList.add("visible");
+		handle.classList.remove("visible", "open");
 	});
 
 	graphWrap.addEventListener("wheel", handleWheelZoom, { passive: false });
