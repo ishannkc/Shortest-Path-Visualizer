@@ -347,6 +347,9 @@
 		vector-effect: non-scaling-stroke;
 		transition: stroke .4s, stroke-width .3s, opacity .3s;
 	}
+	.edge.vehicle {
+		stroke-width: 3.5;
+	}
 	.edge.path-edge {
 		stroke: var(--accent-path);
 		stroke-width: 3;
@@ -429,6 +432,11 @@
 	.node-circle.dest-node {
 		fill: #faf5ff;
 		stroke: var(--accent-dst);
+		stroke-width: 2;
+	}
+	.node-circle.parking-node {
+		fill: #fefce8;
+		stroke: #eab308;
 		stroke-width: 2;
 	}
 
@@ -613,6 +621,10 @@
 		color: var(--accent-dst);
 		font-weight: 600;
 	}
+	.direction-path .node-parking {
+		color: #ca8a04;
+		font-weight: 600;
+	}
 	.direction-path .arrow {
 		color: var(--text-muted);
 		margin: 0 6px;
@@ -652,6 +664,7 @@
 	.ld-src     { color: var(--accent-src);  background: #f0fdf4; }
 	.ld-dst     { color: var(--accent-dst);  background: #faf5ff; }
 	.ld-path    { color: var(--accent-path); background: #eff6ff; }
+	.ld-parking { color: #eab308;            background: #fefce8; }
 
 	.analytics {
 		margin-top: 24px;
@@ -805,6 +818,7 @@
 		<div class="legend">
 			<div class="legend-item"><div class="legend-dot ld-src"></div> Source</div>
 			<div class="legend-item"><div class="legend-dot ld-dst"></div> Destination</div>
+			<div class="legend-item" id="legend-parking" style="display:none"><div class="legend-dot ld-parking"></div> Parking</div>
 		</div>
 
 		<div class="analytics" id="analytics" style="display:none">
@@ -1073,6 +1087,9 @@ function buildGraph() {
 		line.setAttribute("x2", toPosition.x);
 		line.setAttribute("y2", toPosition.y);
 		line.classList.add("edge");
+		if (edge.type === "vehicle") {
+			line.classList.add("vehicle");
+		}
 		line.dataset.index = String(index);
 		line.dataset.from = edge.from;
 		line.dataset.to = edge.to;
@@ -1147,7 +1164,7 @@ function updateNodeVisuals() {
 	document.querySelectorAll(".node-circle").forEach((circle) => {
 		const nodeViewport = circle.closest(".node-viewport");
 		const nodeId = nodeViewport ? nodeViewport.dataset.id : null;
-		circle.classList.remove("source-node", "dest-node", "on-path");
+		circle.classList.remove("source-node", "dest-node", "on-path", "parking-node");
 		if (nodeId === src) {
 			circle.classList.add("source-node");
 		}
@@ -1223,13 +1240,21 @@ function highlightPath(path) {
 		}
 	});
 
+	const mode = activeMode || "walking";
+	const parkingNodes = ["Parking 1", "Parking 2", "Parking 3", "Mechanical Workshop", "NTIC Research Center", "Boys Hostel", "Block 9", "Civil Engineering Block", "Pharmacy Block", "Mesh Canteen", "Buspark", "Environment Block", "School of Law"];
+	let hasParking = false;
 	document.querySelectorAll(".node-circle").forEach((circle) => {
 		const nodeViewport = circle.closest(".node-viewport");
 		const nodeId = nodeViewport ? nodeViewport.dataset.id : null;
 		if (path.includes(nodeId)) {
 			circle.classList.add("on-path");
 		}
+		if (mode === "vehicle" && nodeId && parkingNodes.includes(nodeId) && path.includes(nodeId)) {
+			circle.classList.add("parking-node");
+			hasParking = true;
+		}
 	});
+	document.getElementById("legend-parking").style.display = hasParking ? "flex" : "none";
 
 	const startNode = path[0];
 	const endNode = path[path.length - 1];
@@ -1269,10 +1294,12 @@ function updateAnalytics(result, algorithm) {
 
 	if (result.path && result.path.length) {
 		rows.push(["Path Length", `${result.path.length} nodes`]);
+	} else {
+		rows.push(["Path Length", "No path found"]);
 	}
 
-	if (result.distance !== undefined && result.distance >= 0) {
-		rows.push(["Total Distance", `${result.distance} km`]);
+	if (result.distance !== undefined) {
+		rows.push(["Total Distance", result.distance >= 0 ? `${result.distance} km` : "Unreachable"]);
 	}
 
 	if (result.negative_cycle !== undefined) {
@@ -1301,6 +1328,7 @@ function updateAnalytics(result, algorithm) {
 function updateDirection(result, src, dst) {
 	const pathEl = document.getElementById("direction-path");
 	const distEl = document.getElementById("direction-dist");
+	const mode = activeMode || "walking";
 
 	if (!result.path || result.path.length < 2) {
 		pathEl.textContent = "No path found";
@@ -1308,12 +1336,16 @@ function updateDirection(result, src, dst) {
 		return;
 	}
 
+	const parkingNodes = ["Parking 1", "Parking 2", "Parking 3", "Mechanical Workshop", "NTIC Research Center", "Boys Hostel", "Block 9", "Civil Engineering Block", "Pharmacy Block", "Mesh Canteen", "Buspark", "Environment Block", "School of Law"];
 	const parts = result.path.map((node, i) => {
 		if (node === src) {
 			return `<span class="node-src">${node}</span>`;
 		}
 		if (node === dst) {
 			return `<span class="node-dst">${node}</span>`;
+		}
+		if (mode === "vehicle" && parkingNodes.includes(node)) {
+			return `<span class="node-parking">${node}</span>`;
 		}
 		return node;
 	});
@@ -1336,7 +1368,7 @@ async function loadGraph() {
 function clearPathDisplay() {
 	clearVisualization();
 	document.querySelectorAll(".edge").forEach((e) => e.classList.remove("path-edge", "path-edge-viz"));
-	document.querySelectorAll(".node-circle").forEach((c) => c.classList.remove("on-path"));
+	document.querySelectorAll(".node-circle").forEach((c) => c.classList.remove("on-path", "parking-node"));
 	document.querySelectorAll(".pulse-ring").forEach((r) => r.classList.remove("active"));
 	document.getElementById("direction-path").textContent = "—";
 	document.getElementById("direction-dist").textContent = "";
@@ -1370,8 +1402,9 @@ function stopVisualization() {
 async function startVisualization(src, dst, algorithm) {
 	clearVisualization();
 
+	const mode = activeMode || "walking";
 	const response = await fetch(
-		`${API_BASE}/visualize?src=${encodeURIComponent(src)}&dst=${encodeURIComponent(dst)}&algorithm=${encodeURIComponent(algorithm)}`
+		`${API_BASE}/visualize?src=${encodeURIComponent(src)}&dst=${encodeURIComponent(dst)}&algorithm=${encodeURIComponent(algorithm)}&mode=${encodeURIComponent(mode)}`
 	);
 	if (!response.ok) {
 		throw new Error("Failed to fetch visualization data");
@@ -1398,9 +1431,7 @@ async function startVisualization(src, dst, algorithm) {
 	vizTimer = setInterval(() => {
 		if (vizStep >= vizData.visited_nodes.length) {
 			stopVisualization();
-			if (vizData.path && vizData.path.length >= 2) {
-				animatePath(vizData.path, src, dst, vizData, "path-edge-viz", selectedAlgorithm);
-			}
+			animatePath(vizData.path || [], src, dst, vizData, "path-edge-viz", selectedAlgorithm);
 			return;
 		}
 
@@ -1461,9 +1492,29 @@ function animatePath(path, src, dst, result, cssClass, algorithm) {
 		updateDirection(result, src, dst);
 		updateAnalytics(result, algorithm);
 		updateNodeVisuals();
+		const mode = activeMode || "walking";
+		const parkingNodes = ["Parking 1", "Parking 2", "Parking 3", "Mechanical Workshop", "NTIC Research Center", "Boys Hostel", "Block 9", "Civil Engineering Block", "Pharmacy Block", "Mesh Canteen", "Buspark", "Environment Block", "School of Law"];
+		let hasParking = false;
+		if (mode === "vehicle") {
+			document.querySelectorAll(".node-circle").forEach((circle) => {
+				const nodeViewport = circle.closest(".node-viewport");
+				const nodeId = nodeViewport ? nodeViewport.dataset.id : null;
+				if (nodeId && parkingNodes.includes(nodeId) && path.includes(nodeId)) {
+					circle.classList.add("parking-node");
+					hasParking = true;
+				}
+			});
+		}
+		document.getElementById("legend-parking").style.display = hasParking ? "flex" : "none";
 		document.querySelector("footer").classList.add("visible");
 		document.getElementById("results-handle").classList.remove("visible", "open");
 	};
+
+	if (totalEdges <= 0) {
+		showResults();
+		return;
+	}
+
 	for (let i = 0; i < totalEdges; i += 1) {
 		const edgeIdx = findEdgeIndex(path[i], path[i + 1]);
 		if (edgeIdx !== -1) {
@@ -1498,6 +1549,7 @@ function animatePath(path, src, dst, result, cssClass, algorithm) {
 async function findPath() {
 	const src = srcSelect.value;
 	const dst = dstSelect.value;
+	const mode = activeMode || "walking";
 	setError("");
 
 	if (!graphData) {
@@ -1537,7 +1589,7 @@ async function findPath() {
 
 	try {
 		const response = await fetch(
-			`${API_BASE}/shortest-path?src=${encodeURIComponent(src)}&dst=${encodeURIComponent(dst)}`
+			`${API_BASE}/shortest-path?src=${encodeURIComponent(src)}&dst=${encodeURIComponent(dst)}&mode=${encodeURIComponent(mode)}`
 		);
 		const data = await response.json();
 
@@ -1545,7 +1597,15 @@ async function findPath() {
 			throw new Error(data.error || "Failed to fetch shortest path");
 		}
 
-		const chosen = data.dijkstra.path.length ? data.dijkstra : data.bellman_ford;
+		let chosen;
+		if (mode === "vehicle") {
+			chosen = data.vehicle;
+			if (!chosen.path || chosen.path.length < 2) {
+				throw new Error("No vehicle-accessible path found");
+			}
+		} else {
+			chosen = data.dijkstra.path.length ? data.dijkstra : data.bellman_ford;
+		}
 		animatePath(chosen.path, src, dst, chosen);
 	} catch (error) {
 		setError(error.message || "Failed to compute shortest path");
@@ -1562,7 +1622,7 @@ function resetGraph() {
 	setError("");
 	resetZoom();
 	document.querySelectorAll(".node-circle").forEach((circle) => {
-		circle.classList.remove("source-node", "dest-node", "on-path");
+		circle.classList.remove("source-node", "dest-node", "on-path", "parking-node");
 	});
 	document.querySelectorAll(".edge").forEach((edge) => edge.classList.remove("path-edge", "path-edge-viz"));
 	document.querySelectorAll(".pulse-ring").forEach((ring) => ring.classList.remove("active"));

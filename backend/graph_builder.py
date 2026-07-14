@@ -69,6 +69,61 @@ def load_graph():
 	return adj_list, edge_list, nodes, nx_graph
 
 
+ONE_WAY_VEHICLE_EDGES = {
+	("VC Office", "Canteen"),
+	("Canteen", "Block 6"),
+	("Block 6", "Fountain"),
+	("Fountain", "Semi-circle Park"),
+	("Semi-circle Park", "Cafeteria"),
+	("Cafeteria", "VC Office"),
+}
+
+
+def load_vehicle_graph():
+	data = _read_graph_data()
+	nodes = [node["id"] for node in data.get("nodes", [])]
+	adj_list = {node_id: [] for node_id in nodes}
+
+	for edge in data.get("edges", []):
+		if edge.get("type") != "vehicle":
+			continue
+		u = edge["from"]
+		v = edge["to"]
+		weight = edge["weight"]
+
+		if (u, v) in ONE_WAY_VEHICLE_EDGES:
+			adj_list[u].append((v, weight))
+		elif (v, u) in ONE_WAY_VEHICLE_EDGES:
+			adj_list[v].append((u, weight))
+		else:
+			adj_list[u].append((v, weight))
+			adj_list[v].append((u, weight))
+
+	return adj_list
+
+
+def load_vehicle_edge_list():
+	data = _read_graph_data()
+	edge_list = []
+	for edge in data.get("edges", []):
+		if edge.get("type") != "vehicle":
+			continue
+		u = edge["from"]
+		v = edge["to"]
+		weight = edge["weight"]
+		if (u, v) in ONE_WAY_VEHICLE_EDGES:
+			edge_list.append((u, v, weight))
+		elif (v, u) in ONE_WAY_VEHICLE_EDGES:
+			edge_list.append((v, u, weight))
+		else:
+			edge_list.append((u, v, weight))
+			edge_list.append((v, u, weight))
+	return edge_list
+
+
+PARKING_NODES = ["Parking 1", "Parking 2", "Parking 3", "Mechanical Workshop", "NTIC Research Center", "Boys Hostel", "Block 9", "Civil Engineering Block", "Pharmacy Block", "Mesh Canteen", "Buspark", "Environment Block", "School of Law"]
+
+
 def load_graph_data():
 	data = _read_graph_data()
 	node_data = data.get("nodes", [])

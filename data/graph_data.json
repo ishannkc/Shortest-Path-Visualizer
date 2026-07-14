@@ -106,6 +106,11 @@
       "y": 527
     },
     {
+      "id": "Buspark",
+      "x": 577,
+      "y": 535
+    },
+    {
       "id": "Social Hall",
       "x": 449,
       "y": 533
@@ -255,12 +260,14 @@
     {
       "from": "KU Gate",
       "to": "Parking 1",
-      "weight": 0.03
+      "weight": 0.03,
+      "type": "vehicle"
     },
     {
       "from": "KU Gate",
       "to": "Pond",
-      "weight": 0.06
+      "weight": 0.06,
+      "type": "vehicle"
     },
     {
       "from": "Parking 1",
@@ -270,7 +277,8 @@
     {
       "from": "Pond",
       "to": "Block 9",
-      "weight": 0.04
+      "weight": 0.04,
+      "type": "vehicle"
     },
     {
       "from": "Pond",
@@ -345,32 +353,38 @@
     {
       "from": "NTIC Research Center",
       "to": "Mechanical Workshop",
-      "weight": 0.05
+      "weight": 0.05,
+      "type": "vehicle"
     },
     {
       "from": "Boys Hostel",
       "to": "TTC Boys Hostel",
-      "weight": 0.08
+      "weight": 0.08,
+      "type": "vehicle"
     },
     {
       "from": "TTC Boys Hostel",
       "to": "Block 31 C",
-      "weight": 0.04
+      "weight": 0.04,
+      "type": "vehicle"
     },
     {
       "from": "TTC Boys Hostel",
       "to": "School of Law",
-      "weight": 0.13
+      "weight": 0.13,
+      "type": "vehicle"
     },
     {
       "from": "Block 31 C",
       "to": "Mesh Canteen",
-      "weight": 0.05
+      "weight": 0.05,
+      "type": "vehicle"
     },
     {
       "from": "Block 31 C",
       "to": "School of Law",
-      "weight": 0.14
+      "weight": 0.14,
+      "type": "vehicle"
     },
     {
       "from": "Mesh Canteen",
@@ -385,7 +399,8 @@
     {
       "from": "Cafeteria",
       "to": "Semi-circle Park",
-      "weight": 0.05
+      "weight": 0.05,
+      "type": "vehicle"
     },
     {
       "from": "Cafeteria",
@@ -430,12 +445,14 @@
     {
       "from": "Bank",
       "to": "Exam Controller Office",
-      "weight": 0.05
+      "weight": 0.05,
+      "type": "vehicle"
     },
     {
       "from": "Exam Controller Office",
       "to": "Parking 3",
-      "weight": 0.06
+      "weight": 0.06,
+      "type": "vehicle"
     },
     {
       "from": "Shed",
@@ -515,7 +532,8 @@
     {
       "from": "VC Office",
       "to": "Canteen",
-      "weight": 0.05
+      "weight": 0.05,
+      "type": "vehicle"
     },
     {
       "from": "VC Office",
@@ -550,12 +568,14 @@
     {
       "from": "Civil Engineering Block",
       "to": "Pharmacy Block",
-      "weight": 0.04
+      "weight": 0.04,
+      "type": "vehicle"
     },
     {
       "from": "Civil Engineering Block",
       "to": "Block 10",
-      "weight": 0.06
+      "weight": 0.06,
+      "type": "vehicle"
     },
     {
       "from": "Pharmacy Block",
@@ -570,7 +590,8 @@
     {
       "from": "Fountain",
       "to": "Block 6",
-      "weight": 0.07
+      "weight": 0.07,
+      "type": "vehicle"
     },
     {
       "from": "Hydrogen Refueling Station",
@@ -640,7 +661,8 @@
     {
       "from": "Fountain",
       "to": "Semi-circle Park",
-      "weight": 0.04
+      "weight": 0.04,
+      "type": "vehicle"
     },
     {
       "from": "Technical Training Center",
@@ -710,7 +732,8 @@
     {
       "from": "KU Gate",
       "to": "Block 10",
-      "weight": 0.06
+      "weight": 0.06,
+      "type": "vehicle"
     },
     {
       "from": "Parking 1",
@@ -745,7 +768,8 @@
     {
       "from": "Pharmacy Block",
       "to": "Mesh Canteen",
-      "weight": 0.11
+      "weight": 0.11,
+      "type": "vehicle"
     },
     {
       "from": "Volleyball Court",
@@ -760,13 +784,76 @@
     {
       "from": "Canteen",
       "to": "Block 6",
-      "weight": 0.03
+      "weight": 0.03,
+      "type": "vehicle"
     },
     {
       "from": "Pond",
       "to": "VC Office",
       "weight": 0.05
-      
+    },
+    {
+      "from": "Block 31 C",
+      "to": "Parking 2",
+      "weight": 0.16
+    },
+    {
+      "from": "Block 31 C",
+      "to": "Bank",
+      "weight": 0.16
+    },
+    {
+      "from": "Mesh Canteen",
+      "to": "Semi-circle Park",
+      "weight": 0.1
+    },
+    {
+      "from": "Semi-circle Park",
+      "to": "Bank",
+      "weight": 0.06,
+      "type": "vehicle"
+    },
+    {
+      "from": "Boys Hostel",
+      "to": "NTIC Research Center",
+      "weight": 0.14,
+      "type": "vehicle"
+    },
+    {
+      "from": "KU Gate",
+      "to": "VC Office",
+      "weight": 0.1,
+      "type": "vehicle"
+    },
+    {
+      "from": "VC Office",
+      "to": "Cafeteria",
+      "weight": 0.1,
+      "type": "vehicle"
+    },
+    {
+      "from": "Semi-circle Park",
+      "to": "Parking 2",
+      "weight": 0.08,
+      "type": "vehicle"
+    },
+    {
+      "from": "Buspark",
+      "to": "Boys Hostel",
+      "weight": 0.04,
+      "type": "vehicle"
+    },
+    {
+      "from": "Buspark",
+      "to": "TTC Boys Hostel",
+      "weight": 0.04,
+      "type": "vehicle"
+    },
+    {
+      "from": "Buspark",
+      "to": "Block 31 C",
+      "weight": 0.08,
+      "type": "vehicle"
     }
   ]
 }
