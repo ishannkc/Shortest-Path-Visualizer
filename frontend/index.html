@@ -368,6 +368,20 @@
 		opacity: 0.6;
 		transition: stroke .3s, opacity .3s;
 	}
+	.edge.path-edge-viz {
+		stroke: var(--accent-path);
+		stroke-width: 3;
+		stroke-dasharray: 2000;
+		stroke-dashoffset: 2000;
+		animation: draw-path-edge-viz 2s ease-out forwards;
+	}
+	.edge.path-edge-viz.explored,
+	.edge.path-edge-viz.exploring {
+		stroke: var(--accent-path);
+		stroke-width: 3;
+		opacity: 1;
+	}
+
 	.edge.path-edge.explored,
 	.edge.path-edge.exploring {
 		stroke: var(--accent-path);
@@ -379,6 +393,10 @@
 		100% { stroke-dashoffset: 0; }
 	}
 	@keyframes draw-path-edge {
+		0%   { stroke-dashoffset: 2000; }
+		100% { stroke-dashoffset: 0; }
+	}
+	@keyframes draw-path-edge-viz {
 		0%   { stroke-dashoffset: 2000; }
 		100% { stroke-dashoffset: 0; }
 	}
@@ -449,6 +467,19 @@
 		stroke-width: 2;
 		filter: drop-shadow(0 0 6px rgba(37,99,235,0.15));
 		transition: fill .3s, stroke .3s;
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: node-bounce 2s ease-in-out infinite;
+	}
+	.node-circle.visited:hover {
+		fill: #dbeafe;
+		stroke: var(--accent-path);
+		stroke-width: 2.5;
+		filter: drop-shadow(0 0 14px rgba(37,99,235,0.4));
+	}
+	@keyframes node-bounce {
+		0%, 100% { transform: scale(1); }
+		50% { transform: scale(1.06); }
 	}
 
 	.pulse-ring {
@@ -1118,6 +1149,16 @@ async function loadGraph() {
 	buildGraph();
 }
 
+function clearPathDisplay() {
+	clearVisualization();
+	document.querySelectorAll(".edge").forEach((e) => e.classList.remove("path-edge", "path-edge-viz"));
+	document.querySelectorAll(".node-circle").forEach((c) => c.classList.remove("on-path"));
+	document.querySelectorAll(".pulse-ring").forEach((r) => r.classList.remove("active"));
+	document.getElementById("direction-path").textContent = "—";
+	document.getElementById("direction-dist").textContent = "";
+	document.querySelector("footer").classList.remove("visible");
+}
+
 function clearVisualization() {
 	if (vizTimer) {
 		clearInterval(vizTimer);
@@ -1165,7 +1206,7 @@ async function startVisualization(src, dst, algorithm) {
 		if (vizStep >= vizData.visited_nodes.length) {
 			stopVisualization();
 			if (vizData.path && vizData.path.length >= 2) {
-				animatePath(vizData.path, src, dst, vizData);
+				animatePath(vizData.path, src, dst, vizData, "path-edge-viz");
 			}
 			return;
 		}
@@ -1217,10 +1258,9 @@ async function startVisualization(src, dst, algorithm) {
 	}, 380);
 }
 
-function animatePath(path, src, dst, result) {
-	document.querySelectorAll(".edge").forEach((e) => e.classList.remove("path-edge"));
-	document.querySelectorAll(".node-circle").forEach((c) => c.classList.add("on-path"));
-	document.querySelectorAll(".pulse-ring").forEach((r) => r.classList.add("active"));
+function animatePath(path, src, dst, result, cssClass) {
+	cssClass = cssClass || "path-edge";
+	document.querySelectorAll(".edge").forEach((e) => e.classList.remove("path-edge", "path-edge-viz"));
 
 	const totalEdges = path.length - 1;
 	let animatedCount = 0;
@@ -1234,7 +1274,7 @@ function animatePath(path, src, dst, result) {
 		if (edgeIdx !== -1) {
 			setTimeout(() => {
 				const edge = document.querySelector(`.edge[data-index="${edgeIdx}"]`);
-				if (edge) edge.classList.add("path-edge");
+				if (edge) edge.classList.add(cssClass);
 				animatedCount += 1;
 				if (animatedCount === totalEdges) {
 					showResults();
@@ -1316,7 +1356,7 @@ function resetGraph() {
 	document.querySelectorAll(".node-circle").forEach((circle) => {
 		circle.classList.remove("source-node", "dest-node", "on-path");
 	});
-	document.querySelectorAll(".edge").forEach((edge) => edge.classList.remove("path-edge"));
+	document.querySelectorAll(".edge").forEach((edge) => edge.classList.remove("path-edge", "path-edge-viz"));
 	document.querySelectorAll(".pulse-ring").forEach((ring) => ring.classList.remove("active"));
 
 	document.getElementById("direction-path").textContent = "—";
@@ -1352,6 +1392,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 	["src-select", "dst-select"].forEach((elementId) => {
 		document.getElementById(elementId).addEventListener("change", () => {
 			clickState = 0;
+			clearPathDisplay();
 			updateNodeVisuals();
 		});
 	});
@@ -1367,6 +1408,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 				activeMode = mode;
 				btn.classList.add("active");
 			}
+			clearPathDisplay();
 			updateSelectsDisabled();
 		});
 	});
@@ -1383,6 +1425,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 				selectedAlgorithm = algo;
 				opt.classList.add("selected");
 			}
+			clearPathDisplay();
 			document.getElementById("viz-btn").classList.toggle("active", selectedAlgorithm !== null);
 		});
 	});
