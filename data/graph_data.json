@@ -766,7 +766,36 @@
       "from": "Pond",
       "to": "VC Office",
       "weight": 0.05
-      
+    },
+    {
+      "from": "Block 31 C",
+      "to": "Parking 2",
+      "weight": 0.16
+    },
+    {
+      "from": "Block 31 C",
+      "to": "Bank",
+      "weight": 0.16
+    },
+    {
+      "from": "Mesh Canteen",
+      "to": "Semi-circle Park",
+      "weight": 0.10
+    },
+    {
+      "from": "Semi-circle Park",
+      "to": "Bank",
+      "weight": 0.06
+    },
+    {
+      "from": "Boys Hostel",
+      "to": "NTIC Research Center",
+      "weight": 0.14
+    },
+    {
+      "from": "KU Gate",
+      "to": "VC Office",
+      "weight": 0.10
     }
   ]
 }
