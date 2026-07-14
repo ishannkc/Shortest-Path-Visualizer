@@ -59,5 +59,31 @@ def get_shortest_path():
 	return jsonify({"dijkstra": d_result, "bellman_ford": b_result})
 
 
+@app.get("/visualize")
+def get_visualization():
+	src = request.args.get("src")
+	dst = request.args.get("dst")
+	algorithm = request.args.get("algorithm")
+
+	if not src or not dst:
+		return jsonify({"error": "src and dst are required"}), 400
+	if not algorithm:
+		return jsonify({"error": "algorithm parameter is required"}), 400
+
+	if src not in NODES:
+		return jsonify({"error": f"Invalid node name: {src}"}), 400
+	if dst not in NODES:
+		return jsonify({"error": f"Invalid node name: {dst}"}), 400
+
+	if algorithm == "dijkstra":
+		result = dijkstra(ADJ_LIST, src, dst)
+	elif algorithm == "bellman_ford":
+		result = bellman_ford(EDGE_LIST, NODES, src, dst)
+	else:
+		return jsonify({"error": f"Unknown algorithm: {algorithm}"}), 400
+
+	return jsonify(result)
+
+
 if __name__ == "__main__":
 	app.run(debug=True, port=5000)

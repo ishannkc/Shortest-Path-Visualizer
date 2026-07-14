@@ -3,20 +3,22 @@ import heapq
 
 def dijkstra(adj_list, source, destination):
 	if source not in adj_list or destination not in adj_list:
-		return {"path": [], "distance": -1, "steps": 0}
+		return {"path": [], "distance": -1, "steps": 0, "visited_nodes": []}
 
 	dist = {node: float("inf") for node in adj_list}
 	prev = {node: None for node in adj_list}
-	visited = set()
+	visited_set = set()
+	visited_nodes = []
 	heap = [(0, source)]
 	dist[source] = 0
 	steps = 0
 
 	while heap:
 		cost, node = heapq.heappop(heap)
-		if node in visited:
+		if node in visited_set:
 			continue
-		visited.add(node)
+		visited_set.add(node)
+		visited_nodes.append(node)
 
 		if node == destination:
 			break
@@ -30,7 +32,7 @@ def dijkstra(adj_list, source, destination):
 				steps += 1
 
 	if dist[destination] == float("inf"):
-		return {"path": [], "distance": -1, "steps": 0}
+		return {"path": [], "distance": -1, "steps": 0, "visited_nodes": visited_nodes}
 
 	path = []
 	current = destination
@@ -41,11 +43,12 @@ def dijkstra(adj_list, source, destination):
 		current = prev[current]
 
 	if not path or path[-1] != source:
-		return {"path": [], "distance": -1, "steps": 0}
+		return {"path": [], "distance": -1, "steps": 0, "visited_nodes": visited_nodes}
 
 	path.reverse()
 	return {
 		"path": path,
 		"distance": round(dist[destination], 4),
 		"steps": steps,
+		"visited_nodes": visited_nodes,
 	}
